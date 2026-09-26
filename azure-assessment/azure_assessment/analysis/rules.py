@@ -23,6 +23,9 @@ class Rule:
     types: tuple[str, ...]  # lower-case ARM types; ("*",) means every resource
     check: Check
     recommendation: str
+    # Input fields the check reads. If the customer's file lacks one, the rule is reported
+    # as "not assessed" rather than counted as a pass.
+    needs: tuple[str, ...] = ("properties",)
 
     def applies_to(self, r: Resource) -> bool:
         # "*" matches everything; a trailing "*" matches a type prefix (e.g. "microsoft.classic*").
@@ -191,11 +194,12 @@ ST = "microsoft.storage/storageaccounts"
 
 RULES: list[Rule] = [
     Rule("GOV-001", "Required tags missing", "Governance", "Medium", ("*",), _missing_tags,
-         "Enforce the tagging standard with Azure Policy (Require/Inherit a tag) and back-fill existing resources."),
+         "Enforce the tagging standard with Azure Policy (Require/Inherit a tag) and back-fill existing resources.",
+         needs=("tags",)),
     Rule("GOV-002", "Resource outside approved regions", "Governance", "Medium", ("*",), _disallowed_region,
-         "Apply the 'Allowed locations' policy and plan migration of out-of-policy resources."),
+         "Apply the 'Allowed locations' policy and plan migration of out-of-policy resources.", needs=()),
     Rule("GOV-003", "Classic (ASM) resource in use", "Governance", "High", ("microsoft.classic*",), _classic,
-         "Migrate classic resources to Azure Resource Manager before platform retirement."),
+         "Migrate classic resources to Azure Resource Manager before platform retirement.", needs=()),
 
     Rule("SEC-001", "Storage account permits HTTP", "Security", "High", (ST,), _st_https,
          "Enable 'Secure transfer required' on the storage account."),
@@ -220,7 +224,7 @@ RULES: list[Rule] = [
     Rule("REL-002", "VM uses unmanaged disks", "Reliability", "High", (VM,), _vm_unmanaged,
          "Convert to managed disks (unmanaged disks are retired)."),
     Rule("REL-003", "Storage account uses locally redundant replication", "Reliability", "Low", (ST,), _st_lrs,
-         "Use ZRS/GZRS for production data that needs zone or regional resilience."),
+         "Use ZRS/GZRS for production data that needs zone or regional resilience.", needs=("sku",)),
     Rule("REL-004", "SQL database not zone redundant", "Reliability", "Low",
          ("microsoft.sql/servers/databases",), _sqldb_zr,
          "Enable zone redundancy on business-critical databases."),

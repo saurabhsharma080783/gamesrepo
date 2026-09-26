@@ -1,8 +1,7 @@
-"""Core data models shared by collectors, analysis and report generators."""
+"""Core data models shared by input loaders, analysis and report generators."""
 from __future__ import annotations
 
 from dataclasses import dataclass, field, asdict
-from datetime import datetime, timezone
 from typing import Any
 
 SEVERITY_ORDER = {"High": 0, "Medium": 1, "Low": 2}
@@ -25,29 +24,6 @@ class Resource:
     zones: list[str] = field(default_factory=list)
     properties: dict[str, Any] = field(default_factory=dict)
 
-    @classmethod
-    def from_dict(cls, raw: dict[str, Any], sub_names: dict[str, str] | None = None) -> "Resource":
-        """Normalise a record from Resource Graph, `az` CLI output or our own export."""
-        sub_id = raw.get("subscription_id") or raw.get("subscriptionId") or ""
-        rid = raw.get("id", "")
-        if not sub_id and "/subscriptions/" in rid.lower():
-            sub_id = rid.split("/")[2]
-        sub_name = raw.get("subscription_name") or raw.get("subscriptionName") or (sub_names or {}).get(sub_id, "")
-        return cls(
-            id=rid,
-            name=raw.get("name", ""),
-            type=(raw.get("type") or "").lower(),
-            location=(raw.get("location") or "").lower(),
-            resource_group=raw.get("resource_group") or raw.get("resourceGroup") or "",
-            subscription_id=sub_id,
-            subscription_name=sub_name or sub_id,
-            kind=raw.get("kind") or "",
-            sku=raw.get("sku") or {},
-            tags=raw.get("tags") or {},
-            zones=raw.get("zones") or [],
-            properties=raw.get("properties") or {},
-        )
-
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
@@ -67,13 +43,19 @@ class Finding:
     recommendation: str
 
 
+# Optional per-resource fields an input file may or may not supply. Rules that need a field
+# the input lacks are reported as "not assessed" instead of silently passing.
+OPTIONAL_FIELDS = frozenset({"tags", "sku", "kind", "zones", "properties"})
+
+
 @dataclass
 class Inventory:
     resources: list[Resource]
     subscriptions: dict[str, str] = field(default_factory=dict)  # id -> display name
     tenant_id: str = ""
-    collected_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat(timespec="seconds"))
-    source: str = "azure-resource-graph"
+    collected_at: str = ""  # when the customer exported the inventory, if known
+    source: str = ""
+    available_fields: frozenset[str] = OPTIONAL_FIELDS
 
     def to_dict(self) -> dict[str, Any]:
         return {

@@ -117,4 +117,4 @@ def build(seed: int = 7) -> Inventory:
     add(conn, "rg-legacy", "Microsoft.ClassicCompute/domainNames", "legacy-cloudservice", location="eastus")
 
     return Inventory(resources=resources, subscriptions=dict(SUBS),
-                     tenant_id="00000000-0000-0000-0000-000000000000", source="sample")
+                     tenant_id="00000000-0000-0000-0000-000000000000", source="sample data")

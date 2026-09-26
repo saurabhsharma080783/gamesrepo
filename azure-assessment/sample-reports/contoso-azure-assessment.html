@@ -60,7 +60,8 @@ h3 { font-size: 17px; margin: 20px 0 8px; }
 ul.obs li { margin-bottom: 6px; }
 .pill { display: inline-block; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; border: 1px solid currentColor; }
 .sev-High, .kpi .v.sev-High { color: var(--high); } .sev-Medium { color: var(--medium); } .sev-Low { color: var(--low); }
-.r-Good { color: var(--good); } .r-Fair { color: var(--low); } .r-Poor { color: var(--high); }
+.r-Good { color: var(--good); } .r-Fair { color: var(--low); } .r-Poor { color: var(--high); } .r-Not-assessed { color: var(--muted); }
+.notice { border-left: 4px solid var(--accent); }
 .table-wrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
 th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
@@ -84,7 +85,7 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px
 <header class="hero"><div class="wrap">
   <div class="eyebrow">AZURE ENVIRONMENT ASSESSMENT</div>
   <h1>Contoso</h1>
-  <p>Inventory collected 2026-09-26T07:33:27+00:00 · Report generated 26 September 2026 07:33</p>
+  <p>Source: sample-inventory.csv · Exported 2026-09-20 · Report generated 26 September 2026 07:39</p>
 </div></header>
 <nav class="toc"><div class="wrap">
   <a href="#summary">Summary</a><a href="#inventory">Inventory</a><a href="#scorecard">Scorecard</a>
@@ -110,13 +111,16 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px
       <div>
         <div class="muted">Overall posture score</div>
         <div style="font-size:22px;font-weight:700" class="r-Fair">Fair</div>
+        
         <div class="muted">106 findings · 17 high · 73 medium · 16 low</div>
       </div>
     </div>
     <h3>Key observations</h3>
-    <ul class="obs"><li>133 resources were assessed across 3 subscription(s), 19 resource groups and 4 region(s).</li><li>106 findings were raised: 17 high, 73 medium and 16 low severity, affecting 78 resources.</li><li>Security is the weakest area (score 65/100); Governance is the strongest (84/100).</li><li>74% of resources carry all required tags (environment, owner, costCenter).</li><li>Priority high-severity issues: Storage account permits HTTP (4); Storage account allows anonymous blob access (4); VM stopped but not deallocated (4).</li></ul>
+    <ul class="obs"><li>133 resources were assessed across 3 subscription(s), 19 resource groups and 4 region(s).</li><li>106 finding(s) were raised: 17 high, 73 medium and 16 low severity, affecting 78 resources.</li><li>Security is the weakest area (score 65/100); Governance is the strongest (84/100).</li><li>74% of resources carry all required tags (environment, owner, costCenter).</li><li>Priority high-severity issues: Storage account permits HTTP (4); Storage account allows anonymous blob access (4); VM stopped but not deallocated (4).</li></ul>
   </div>
 </section>
+
+
 
 <section id="inventory">
   <h2>Inventory overview</h2>
@@ -212,6 +216,7 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px
     <h3>Security</h3>
     
     
+    
     <div class="rule High">
       <div><strong>SEC-001 · Storage account permits HTTP</strong> <span class="pill sev-High">High</span></div>
       <div class="meta">4 of 10 evaluated resources · e.g. stdevdata01, stdevdata03, stprddata03, stprddata04</div>
@@ -259,6 +264,7 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px
     <h3>Reliability</h3>
     
     
+    
     <div class="rule Medium">
       <div><strong>REL-001 · VM has no zone or availability set</strong> <span class="pill sev-Medium">Medium</span></div>
       <div class="meta">15 of 24 evaluated resources · e.g. vm-dev-000, vm-dev-001, vm-dev-002, vm-dev-003, vm-dev-004 …</div>
@@ -280,6 +286,7 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px
   
     
     <h3>Cost Optimization</h3>
+    
     
     
     <div class="rule High">
@@ -317,6 +324,7 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px
     <h3>Operational Excellence</h3>
     
     
+    
     <div class="rule Low">
       <div><strong>OPS-001 · Previous-generation VM size</strong> <span class="pill sev-Low">Low</span></div>
       <div class="meta">5 of 24 evaluated resources · e.g. vm-dev-006, vm-prd-001, vm-prd-002, vm-prd-004, vm-prd-008</div>
@@ -332,6 +340,7 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px
   
     
     <h3>Governance</h3>
+    
     
     
     <div class="rule High">

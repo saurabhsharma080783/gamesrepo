@@ -44,7 +44,7 @@ def friendly_type(t: str) -> str:
 @dataclass
 class PillarScore:
     pillar: str
-    score: int          # 0-100, weighted pass rate
+    score: int | None   # 0-100 weighted pass rate; None when the input had no data to assess this pillar
     checks: int         # rule evaluations
     failed: int
     high: int = 0
@@ -53,7 +53,29 @@ class PillarScore:
 
     @property
     def rating(self) -> str:
-        return "Good" if self.score >= 80 else "Fair" if self.score >= 60 else "Poor"
+        return rating_for(self.score)
+
+    @property
+    def score_label(self) -> str:
+        return "n/a" if self.score is None else str(self.score)
+
+
+def rating_for(score: int | None) -> str:
+    if score is None:
+        return "Not assessed"
+    return "Good" if score >= 80 else "Fair" if score >= 60 else "Poor"
+
+
+@dataclass
+class CoverageGap:
+    """A rule that could not be (fully) evaluated because the input file lacked the data it needs."""
+    rule: Rule
+    applicable: int   # resources of a type the rule covers
+    skipped: int      # of those, how many had no data for the rule
+
+    @property
+    def missing(self) -> str:
+        return ", ".join(self.rule.needs)
 
 
 @dataclass
@@ -72,6 +94,7 @@ class Assessment:
     rule_summaries: list[RuleSummary]
     config: dict
     customer: str = "Customer"
+    coverage_gaps: list[CoverageGap] = field(default_factory=list)
 
     # --- convenience aggregates ------------------------------------------
     @property
@@ -80,13 +103,22 @@ class Assessment:
 
     @property
     def overall_score(self) -> int:
-        scored = [p for p in self.pillar_scores if p.checks]
-        return round(sum(p.score for p in scored) / len(scored)) if scored else 100
+        scored = [p for p in self.pillar_scores if p.score is not None]
+        return round(sum(p.score for p in scored) / len(scored)) if scored else None
 
     @property
     def overall_rating(self) -> str:
-        s = self.overall_score
-        return "Good" if s >= 80 else "Fair" if s >= 60 else "Poor"
+        return rating_for(self.overall_score)
+
+    @property
+    def score_basis(self) -> str:
+        """Caveat shown next to the overall score when some pillars could not be scored."""
+        n = sum(1 for p in self.pillar_scores if p.score is not None)
+        return "" if n == len(self.pillar_scores) else f"Based on {n} of {len(self.pillar_scores)} pillars"
+
+    @property
+    def overall_score_label(self) -> str:
+        return "n/a" if self.overall_score is None else str(self.overall_score)
 
     def count_by(self, attr: str, top: int | None = None) -> list[tuple[str, int]]:
         c = Counter(getattr(r, attr) or "(none)" for r in self.inventory.resources)
@@ -111,13 +143,26 @@ class Assessment:
         return {s: c.get(s, 0) for s in SEVERITY_ORDER}
 
     @property
-    def tag_coverage(self) -> int:
+    def tag_coverage(self) -> int | None:
         req = [t.lower() for t in self.config.get("required_tags") or []]
         res = self.inventory.resources
-        if not req or not res:
-            return 100
+        if "tags" not in self.inventory.available_fields or not req or not res:
+            return None
         ok = sum(1 for r in res if set(req) <= {k.lower() for k in r.tags})
         return round(100 * ok / len(res))
+
+    @property
+    def tag_coverage_label(self) -> str:
+        return "n/a" if self.tag_coverage is None else f"{self.tag_coverage}%"
+
+    @property
+    def unassessed_rules(self) -> list[CoverageGap]:
+        return [g for g in self.coverage_gaps if g.skipped == g.applicable]
+
+    @property
+    def missing_fields(self) -> list[str]:
+        return sorted({f for g in self.coverage_gaps for f in g.rule.needs
+                       if f not in self.inventory.available_fields})
 
     @property
     def affected_resources(self) -> int:
@@ -137,19 +182,27 @@ class Assessment:
                f"subscription(s), {self.resource_group_count} resource groups and "
                f"{len(self.by_location())} region(s)."]
         sev = self.severity_counts
-        obs.append(f"{len(self.findings)} findings were raised: {sev['High']} high, {sev['Medium']} medium "
+        obs.append(f"{len(self.findings)} finding(s) were raised: {sev['High']} high, {sev['Medium']} medium "
                    f"and {sev['Low']} low severity, affecting {self.affected_resources} resources.")
-        ranked = sorted((p for p in self.pillar_scores if p.checks), key=lambda p: p.score)
-        if ranked:
+        ranked = sorted((p for p in self.pillar_scores if p.score is not None), key=lambda p: p.score)
+        if len(ranked) > 1:
             w, b = ranked[0], ranked[-1]
             obs.append(f"{w.pillar} is the weakest area (score {w.score}/100); "
                        f"{b.pillar} is the strongest ({b.score}/100).")
-        obs.append(f"{self.tag_coverage}% of resources carry all required tags "
-                   f"({', '.join(self.config.get('required_tags') or [])}).")
+        if self.tag_coverage is not None:
+            obs.append(f"{self.tag_coverage}% of resources carry all required tags "
+                       f"({', '.join(self.config.get('required_tags') or [])}).")
         highs = [s for s in self.rule_summaries if s.rule.severity == "High"]
         if highs:
             obs.append("Priority high-severity issues: " +
                        "; ".join(f"{s.rule.title} ({s.affected})" for s in highs[:3]) + ".")
+        if self.coverage_gaps:
+            not_scored = [p.pillar for p in self.pillar_scores if p.score is None]
+            msg = (f"{len(self.coverage_gaps)} check(s) could not be fully assessed because the inventory export "
+                   f"lacks some data" + (f" ({', '.join(self.missing_fields)})" if self.missing_fields else "") + ".")
+            if not_scored:
+                msg += f" Not scored: {', '.join(not_scored)}."
+            obs.append(msg)
         return obs
 
     def roadmap(self) -> dict[str, list[RuleSummary]]:
@@ -181,9 +234,17 @@ def assess(inventory: Inventory, config: dict | None = None, customer: str = "Cu
     if not cfg.get("required_tags"):
         rules = [r for r in rules if r.id != "GOV-001"]
 
+    available = inventory.available_fields
+    applicable: Counter[str] = Counter()
+    skipped: Counter[str] = Counter()
+
     for res in inventory.resources:
         for rule in rules:
             if not rule.applies_to(res):
+                continue
+            applicable[rule.id] += 1
+            if not _has_data(rule, res, available):
+                skipped[rule.id] += 1
                 continue
             detail = rule.check(res, cfg)
             w = SEVERITY_WEIGHT[rule.severity]
@@ -214,7 +275,18 @@ def assess(inventory: Inventory, config: dict | None = None, customer: str = "Cu
         pf = [f for f in findings if f.pillar == p]
         sc = Counter(f.severity for f in pf)
         pillar_scores.append(PillarScore(
-            pillar=p, score=round(100 * (1 - failed_w / ev)) if ev else 100, checks=checks, failed=len(pf),
+            pillar=p, score=round(100 * (1 - failed_w / ev)) if ev else None, checks=checks, failed=len(pf),
             high=sc["High"], medium=sc["Medium"], low=sc["Low"]))
 
-    return Assessment(inventory, findings, pillar_scores, rule_summaries, cfg, customer)
+    gaps = [CoverageGap(r, applicable[r.id], skipped[r.id]) for r in rules if skipped[r.id]]
+    return Assessment(inventory, findings, pillar_scores, rule_summaries, cfg, customer, gaps)
+
+
+def _has_data(rule: Rule, res, available: frozenset[str]) -> bool:
+    for f in rule.needs:
+        if f not in available:
+            return False
+        # Per-resource: a blank properties/sku cell means that row carries no data for the check.
+        if f in ("properties", "sku") and not getattr(res, f):
+            return False
+    return True

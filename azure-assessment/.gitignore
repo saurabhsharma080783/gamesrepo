@@ -1,5 +1,6 @@
 reports/
-inventory.json
+inventory*.json
+inventory*.csv
 __pycache__/
 *.egg-info/
 .pytest_cache/

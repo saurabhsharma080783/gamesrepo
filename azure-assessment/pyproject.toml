@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "azure-assessment"
 version = "0.1.0"
-description = "Collect an Azure inventory and produce Word, PowerPoint and HTML assessment reports"
+description = "Turn a customer's Azure inventory export (CSV or JSON) into Word, PowerPoint and HTML assessment reports"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -17,7 +17,6 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-azure = ["azure-identity>=1.15", "azure-mgmt-resourcegraph>=8.0"]
 dev = ["pytest>=7"]
 
 [project.scripts]

@@ -1,14 +1,20 @@
-"""Command-line interface: ``azure-assess collect | report | run | demo``."""
+"""Command-line interface: ``azure-assess report | demo | template``.
+
+The tool never connects to Azure: the customer exports their inventory (CSV or JSON)
+and this CLI turns it into Word, PowerPoint and HTML reports.
+"""
 from __future__ import annotations
 
 import argparse
 import json
 import logging
+import sys
 import tempfile
 from pathlib import Path
 
+from . import loaders
 from .analysis.assessor import assess
-from .collectors import file_collector
+from .loaders import csv_loader, json_loader, sample
 from .models import Inventory
 
 FORMATS = ("html", "docx", "pptx")
@@ -38,63 +44,72 @@ def generate_reports(inventory: Inventory, out_dir: Path, customer: str, formats
     findings_path = out_dir / f"{base}-findings.json"
     findings_path.write_text(json.dumps([f.__dict__ for f in a.findings], indent=2))
     written["findings"] = findings_path
-    print(f"Assessed {a.total_resources} resources: score {a.overall_score}/100, {len(a.findings)} findings")
+
+    print(f"Assessed {a.total_resources} resources: score {a.overall_score_label}/100, {len(a.findings)} findings")
+    if a.coverage_gaps:
+        print(f"Note: {len(a.coverage_gaps)} check(s) lacked data in the input"
+              + (f" (missing: {', '.join(a.missing_fields)})" if a.missing_fields else "")
+              + "; see 'Data coverage' in the reports.")
     return written
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(prog="azure-assess", description="Azure inventory assessment report generator")
+    ap = argparse.ArgumentParser(prog="azure-assess",
+                                 description="Build Azure assessment reports from a customer's inventory export")
     ap.add_argument("-v", "--verbose", action="store_true")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
-    def scope(p):
-        p.add_argument("-s", "--subscription", action="append", default=[], help="Subscription ID (repeatable)")
-        p.add_argument("-m", "--management-group", action="append", default=[], help="Management group (repeatable)")
-
     def report_opts(p):
-        p.add_argument("-o", "--out", default="reports", help="Output directory")
-        p.add_argument("-c", "--customer", default="Contoso", help="Customer/organisation name on the report")
+        p.add_argument("-o", "--out", default="reports", help="Output directory (default: reports)")
+        p.add_argument("-c", "--customer", default="Customer", help="Customer name shown on the reports")
         p.add_argument("-f", "--formats", default=",".join(FORMATS), help="Comma list of html,docx,pptx")
         p.add_argument("--config", help="JSON file overriding assessment settings (see examples/config.json)")
+        p.add_argument("--inventory-date", help="Date the customer exported the inventory (shown on the reports)")
 
-    p = sub.add_parser("collect", help="Collect inventory from Azure to a JSON file")
-    scope(p)
-    p.add_argument("-o", "--out", default="inventory.json")
-
-    p = sub.add_parser("report", help="Build reports from a saved inventory JSON")
-    p.add_argument("-i", "--input", required=True, help="Inventory JSON (own export, az graph query or az resource list)")
-    report_opts(p)
-
-    p = sub.add_parser("run", help="Collect from Azure and build reports in one step")
-    scope(p)
+    p = sub.add_parser("report", help="Build reports from customer inventory file(s)")
+    p.add_argument("inputs", nargs="+", metavar="FILE", help="Inventory export(s): .csv or .json; several are merged")
     report_opts(p)
 
     p = sub.add_parser("demo", help="Build reports from a built-in sample inventory")
     report_opts(p)
 
+    p = sub.add_parser("template", help="Write a sample inventory file showing the expected input format")
+    p.add_argument("-o", "--out", default="inventory-template.csv", help="Output path ending in .csv or .json")
+
     args = ap.parse_args(argv)
-    logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO, format="%(levelname)s %(message)s")
+    logging.basicConfig(level=logging.DEBUG if args.verbose else logging.WARNING, format="%(levelname)s %(message)s")
 
-    if args.cmd == "collect":
-        from .collectors import azure_collector
-        inv = azure_collector.collect(args.subscription, args.management_group)
-        print(f"Saved {len(inv.resources)} resources to {file_collector.save(inv, args.out)}")
-        return 0
-
-    if args.cmd == "report":
-        inv = file_collector.load(args.input)
-    elif args.cmd == "run":
-        from .collectors import azure_collector
-        inv = azure_collector.collect(args.subscription, args.management_group)
-        file_collector.save(inv, Path(args.out) / "inventory.json")
-    else:
-        from .collectors import sample
+    if args.cmd == "template":
         inv = sample.build()
+        out = Path(args.out)
+        if out.suffix.lower() == ".json":
+            json_loader.save(inv, out)
+        elif out.suffix.lower() == ".csv":
+            csv_loader.save(inv.resources, out)
+        else:
+            ap.error("template output must end in .csv or .json")
+        print(f"Wrote {len(inv.resources)} sample resources to {out}")
+        return 0
 
     formats = [f.strip().lower() for f in args.formats.split(",") if f.strip()]
     bad = set(formats) - set(FORMATS)
     if bad:
         ap.error(f"unknown format(s): {', '.join(sorted(bad))}")
+
+    if args.cmd == "report":
+        try:
+            inv = loaders.load(args.inputs)
+        except (OSError, ValueError) as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
+        if not inv.resources:
+            print("error: the inventory file(s) contain no resources", file=sys.stderr)
+            return 2
+    else:
+        inv = sample.build()
+    if args.inventory_date:
+        inv.collected_at = args.inventory_date
+
     written = generate_reports(inv, Path(args.out), args.customer, formats, _load_config(args.config))
     for kind, path in written.items():
         print(f"  {kind:8s} {path}")
