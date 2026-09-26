@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "azure-assessment"
+version = "0.1.0"
+description = "Collect an Azure inventory and produce Word, PowerPoint and HTML assessment reports"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "python-docx>=1.1",
+  "python-pptx>=0.6.23",
+  "matplotlib>=3.7",
+  "jinja2>=3.1",
+  "Pillow>=9",
+]
+
+[project.optional-dependencies]
+azure = ["azure-identity>=1.15", "azure-mgmt-resourcegraph>=8.0"]
+dev = ["pytest>=7"]
+
+[project.scripts]
+azure-assess = "azure_assessment.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["azure_assessment*"]
+
+[tool.setuptools.package-data]
+azure_assessment = ["reports/templates/*.j2"]
