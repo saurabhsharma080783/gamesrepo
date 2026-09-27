@@ -320,14 +320,11 @@ def _network(c: _Ctx) -> NarrativeSection | None:
     vnets = c.of_type("microsoft.network/virtualnetworks")
     fws = c.of_type("microsoft.network/azurefirewalls")
     if vnets:
-        hubs = [v.name for v in vnets if "hub" in v.name.lower()]
         s.paragraphs.append(
-            f"There are {plural(len(vnets), 'virtual network')} in {join(sorted({v.location for v in vnets}))}."
-            + (f" The naming ({join(hubs)}) and the Azure Firewall deployment "
-               f"({join([f.name for f in fws])}) indicate a hub-and-spoke design, where shared connectivity and "
-               "traffic inspection are centralised in a hub network." if hubs and fws else
-               f" Azure Firewall ({join([f.name for f in fws])}) is deployed for central traffic inspection."
-               if fws else ""))
+            f"There are {plural(len(vnets), 'virtual network')} in {join(sorted({v.location for v in vnets}))}"
+            + (f", with {plural(len(fws), 'Azure Firewall')} deployed" if fws else "")
+            + ". How these networks connect to each other (the topology) is assessed in the Architecture "
+              "assessment section.")
     nsgs = c.of_type("microsoft.network/networksecuritygroups")
     if nsgs:
         if c.has_props and any(r.properties for r in nsgs):

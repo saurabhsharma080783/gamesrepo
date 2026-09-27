@@ -9,19 +9,20 @@
   --bg: #f5f7fa; --surface: #ffffff; --surface-2: #eef3f9; --ink: #0b0b0b; --ink-2: #52514e; --muted: #6b6a66;
   --line: #e1e0d9; --primary: #0f3b68; --accent: #2a78d6; --bar: #2a78d6;
   --high: #d03b3b; --medium: #c9622f; --low: #9a6700; --good: #0a7f0a;
+  --d-hub-fill: #e3ecf7; --d-hub-stroke: #0f3b68; --d-bad-fill: #fdf1f1;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #0d0d0d; --surface: #1a1a19; --surface-2: #232322; --ink: #ffffff; --ink-2: #c3c2b7; --muted: #9a998f;
     --line: #2c2c2a; --primary: #9ec5f4; --accent: #3987e5; --bar: #3987e5;
-    --high: #e66767; --medium: #ec835a; --low: #fab219; --good: #0ca30c; color-scheme: dark;
+    --high: #e66767; --medium: #ec835a; --low: #fab219; --good: #0ca30c; --d-hub-fill: #16283d; --d-hub-stroke: #9ec5f4; --d-bad-fill: #2a1a1a; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #0d0d0d; --surface: #1a1a19; --surface-2: #232322; --ink: #ffffff; --ink-2: #c3c2b7; --muted: #9a998f;
   --line: #2c2c2a; --primary: #9ec5f4; --accent: #3987e5; --bar: #3987e5;
-  --high: #e66767; --medium: #ec835a; --low: #fab219; --good: #0ca30c; color-scheme: dark;
+  --high: #e66767; --medium: #ec835a; --low: #fab219; --good: #0ca30c; --d-hub-fill: #16283d; --d-hub-stroke: #9ec5f4; --d-bad-fill: #2a1a1a; color-scheme: dark;
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
@@ -90,6 +91,34 @@ caption { text-align: left; font-weight: 600; color: var(--ink-2); padding: 0 0 
 .related-label { font-weight: 600; color: var(--ink-2); font-size: 13px; margin-right: 4px; }
 .related a.pill { text-decoration: none; font-weight: 600; }
 .rule { scroll-margin-top: 56px; }
+article.arch h4 { font-size: 14px; margin: 16px 0 6px; color: var(--ink-2); }
+.pattern { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 16px; }
+.pattern strong { color: var(--accent); }
+.pattern-label { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; }
+.conf-High { color: var(--good); } .conf-Medium { color: var(--low); } .conf-Low { color: var(--high); }
+table.glance a { color: var(--accent); text-decoration: none; }
+.considerations li::marker { color: var(--accent); }
+figure.topology-wrap { margin: 16px 0; }
+figure.topology-wrap figcaption { color: var(--muted); font-size: 13px; margin-top: 6px; }
+svg.topology { width: 100%; max-width: 880px; min-width: 640px; height: auto; display: block; margin: 0 auto; background: var(--surface); }
+svg.topology .node rect { stroke-width: 1.4; }
+svg.topology .node-hub rect { fill: var(--d-hub-fill); stroke: var(--d-hub-stroke); stroke-width: 2; }
+svg.topology .node-spoke rect { fill: var(--surface); stroke: var(--accent); }
+svg.topology .node-other rect { fill: var(--surface); stroke: var(--muted); }
+svg.topology .node-isolated rect { fill: var(--d-bad-fill); stroke: var(--high); stroke-dasharray: 5 4; }
+svg.topology .node-onprem rect { fill: var(--surface-2); stroke: var(--ink-2); }
+svg.topology text { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+svg.topology .t-title { font-size: 13px; font-weight: 700; fill: var(--ink); }
+svg.topology .t-sub { font-size: 11px; fill: var(--ink-2); }
+svg.topology .t-svc { font-size: 10.5px; fill: var(--d-hub-stroke); font-weight: 600; }
+svg.topology .t-note { font-size: 10.5px; } svg.topology .t-note.ok { fill: var(--good); } svg.topology .t-note.warn { fill: var(--medium); }
+svg.topology .t-group { font-size: 12px; font-weight: 700; fill: var(--ink-2); }
+svg.topology .edge { stroke-width: 2; fill: none; }
+svg.topology .edge-hub-spoke, svg.topology .edge-other { stroke: var(--muted); }
+svg.topology .edge-hub-hub { stroke: var(--d-hub-stroke); stroke-dasharray: 8 5; }
+svg.topology .edge-spoke-spoke { stroke: var(--high); stroke-dasharray: 6 4; }
+svg.topology .edge-onprem { stroke: var(--ink-2); stroke-dasharray: 2 4; }
+svg.topology .edge-label { font-size: 11px; fill: var(--ink-2); } svg.topology .edge-label.bad { fill: var(--high); }
 footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px; }
 @media print { nav.toc, .filters { display: none; } body { background: #fff; } .card { break-inside: avoid; } }
 </style>
@@ -98,10 +127,10 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px
 <header class="hero"><div class="wrap">
   <div class="eyebrow">AZURE ENVIRONMENT ASSESSMENT</div>
   <h1>Contoso</h1>
-  <p>Source: sample-inventory.csv · Exported 2026-09-20 · Report generated 27 September 2026 16:14</p>
+  <p>Source: sample-inventory.csv · Exported 2026-09-20 · Report generated 27 September 2026 16:48</p>
 </div></header>
 <nav class="toc"><div class="wrap">
-  <a href="#summary">Summary</a><a href="#environment">Infrastructure</a><a href="#inventory">Inventory</a><a href="#scorecard">Scorecard</a>
+  <a href="#summary">Summary</a><a href="#architecture">Architecture</a><a href="#environment">Infrastructure</a><a href="#inventory">Inventory</a><a href="#scorecard">Scorecard</a>
   <a href="#findings">Findings</a><a href="#roadmap">Roadmap</a><a href="#details">Detailed findings</a>
   <a href="#resources">Resources</a>
   <button type="button" id="theme" aria-label="Toggle colour theme">Theme</button>
@@ -111,16 +140,16 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px
   <h2>Executive summary</h2>
   
   <div class="grid kpis">
-    <div class="card kpi"><div class="v">133</div><div class="l">Resources</div></div>
+    <div class="card kpi"><div class="v">152</div><div class="l">Resources</div></div>
     <div class="card kpi"><div class="v">3</div><div class="l">Subscriptions</div></div>
-    <div class="card kpi"><div class="v">19</div><div class="l">Resource groups</div></div>
-    <div class="card kpi"><div class="v">4</div><div class="l">Regions</div></div>
+    <div class="card kpi"><div class="v">23</div><div class="l">Resource groups</div></div>
+    <div class="card kpi"><div class="v">5</div><div class="l">Regions</div></div>
     <div class="card kpi"><div class="v sev-High">17</div><div class="l">High findings</div></div>
-    <div class="card kpi"><div class="v">74%</div><div class="l">Tag coverage</div></div>
+    <div class="card kpi"><div class="v">78%</div><div class="l">Tag coverage</div></div>
   </div>
   <div class="card" style="margin-top:16px">
     <div class="score">
-      <div class="ring" style="--p: 75; --c: #FAB219"><span>75</span></div>
+      <div class="ring" style="--p: 76; --c: #FAB219"><span>76</span></div>
       <div>
         <div class="muted">Overall posture score</div>
         <div style="font-size:22px;font-weight:700" class="r-Fair">Fair</div>
@@ -129,11 +158,211 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px
       </div>
     </div>
     <h3>Key observations</h3>
-    <ul class="obs"><li>133 resources were assessed across 3 subscription(s), 19 resource groups and 4 region(s).</li><li>106 finding(s) were raised: 17 high, 73 medium and 16 low severity, affecting 78 resources.</li><li>Security is the weakest area (score 65/100); Governance is the strongest (84/100).</li><li>74% of resources carry all required tags (environment, owner, costCenter).</li><li>Priority high-severity issues: Storage account permits HTTP (4); Storage account allows anonymous blob access (4); VM stopped but not deallocated (4).</li></ul>
+    
+    <ul class="obs"><li>152 resources were assessed across 3 subscription(s), 23 resource groups and 5 region(s).</li><li>Architecture at a glance: network topology is multi-region hub-and-spoke with exceptions; hybrid connectivity is site-to-site VPN to on-premises; subscription model is landing-zone style: platform and workload subscriptions, split by environment.</li><li>106 finding(s) were raised: 17 high, 73 medium and 16 low severity, affecting 78 resources.</li><li>Security is the weakest area (score 68/100); Governance is the strongest (86/100).</li><li>78% of resources carry all required tags (environment, owner, costCenter).</li><li>Priority high-severity issues: Storage account permits HTTP (4); Storage account allows anonymous blob access (4); VM stopped but not deallocated (4).</li></ul>
   </div>
 </section>
 
 
+
+<section id="architecture">
+  <h2>Architecture assessment</h2>
+  <p class="lede">The architecture patterns the environment follows, compared with Microsoft's reference architectures (Cloud Adoption Framework Azure landing zone and Well-Architected Framework). Confidence shows how firmly the inventory supports each conclusion: High means direct configuration evidence, Medium means inferred from resource types and naming, Low means the export lacked the data. Identity, role assignments, Azure Policy and management groups are not part of a resource inventory and are out of scope.</p>
+  <div class="card table-wrap" style="padding:0">
+    <table class="glance">
+      <thead><tr><th>Area</th><th>Pattern identified</th><th>Confidence</th></tr></thead>
+      <tbody>
+        <tr><td><a href="#arch-network">1. Network topology</a></td><td><strong>Multi-region hub-and-spoke with exceptions</strong></td><td><span class="pill conf-High">High</span></td></tr>
+      
+        <tr><td><a href="#arch-hybrid">2. Hybrid connectivity</a></td><td><strong>Site-to-site VPN to on-premises</strong></td><td><span class="pill conf-High">High</span></td></tr>
+      
+        <tr><td><a href="#arch-traffic">3. Traffic flow and perimeter security</a></td><td><strong>Defence in depth (central firewall, WAF-protected ingress, private endpoints for PaaS, Bastion for admin access)</strong></td><td><span class="pill conf-High">High</span></td></tr>
+      
+        <tr><td><a href="#arch-landing_zone">4. Subscription and landing zone model</a></td><td><strong>Landing-zone style: platform and workload subscriptions, split by environment</strong></td><td><span class="pill conf-Medium">Medium</span></td></tr>
+      
+        <tr><td><a href="#arch-hosting">5. Application hosting architecture</a></td><td><strong>Hybrid IaaS/PaaS, three-tier (web, application, data)</strong></td><td><span class="pill conf-Medium">Medium</span></td></tr>
+      
+        <tr><td><a href="#arch-resilience">6. Resilience and disaster recovery</a></td><td><strong>Multi-region, but not in Azure region pairs; no DR replication evidence</strong></td><td><span class="pill conf-Medium">Medium</span></td></tr>
+      
+        <tr><td><a href="#arch-operations">7. Operations and monitoring</a></td><td><strong>Federated logging (one workspace per subscription)</strong></td><td><span class="pill conf-Medium">Medium</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  
+  <article class="card env arch" id="arch-network">
+    <h3>1. Network topology</h3>
+    <p class="pattern"><span class="pattern-label">Pattern identified</span> <strong>Multi-region hub-and-spoke with exceptions</strong> <span class="pill conf-High">High confidence</span></p>
+    <p>The network is built around 2 hub virtual networks (vnet-hub-eastus in eastus and vnet-hub-westeurope in westeurope), which host shared services: Azure Bastion, Azure Firewall and VPN gateway. 3 spoke networks peer to the hubs and carry the workloads. This is the hub-and-spoke pattern recommended in the Azure landing zone reference architecture: shared connectivity, inspection and management access are centralised in the hub, and workloads are isolated in spokes.</p><p>The regional hubs are peered with each other (global VNet peering), giving cross-region connectivity between spokes through their hubs.</p>
+    
+    <figure class="topology-wrap">
+      <div class="table-wrap"><svg class="topology" viewBox="0 0 779 783" role="img" aria-label="Network topology: Multi-region hub-and-spoke with exceptions" xmlns="http://www.w3.org/2000/svg">
+<line class="edge edge-onprem" x1="240.0" y1="101.0" x2="240.0" y2="179.0"/>
+<text class="edge-label" x="246.0" y="144.0">VPN</text>
+<path class="edge edge-spoke-spoke" d="M355.0,422.1 Q240.0,480.6 125.0,422.1" fill="none"/>
+<text class="edge-label bad" x="240.0" y="469.6" text-anchor="middle">direct spoke-to-spoke peering</text>
+<line class="edge edge-hub-spoke" x1="240.0" y1="275.2" x2="355.0" y2="341.5"/>
+<line class="edge edge-hub-spoke" x1="654.0" y1="275.2" x2="654.0" y2="341.5"/>
+<line class="edge edge-hub-spoke" x1="240.0" y1="275.2" x2="125.0" y2="341.5"/>
+<line class="edge edge-hub-hub" x1="341.2" y1="227.1" x2="552.8" y2="227.1"/>
+<text class="edge-label" x="447.0" y="221.1" text-anchor="middle">global peering</text>
+<g class="node node-hub"><title>vnet-hub-eastus | Contoso-Connectivity | eastus · 10.0.0.0/22 | Bastion · Firewall · VPN gateway</title><rect x="138.8" y="179.0" width="202.4" height="96.2" rx="7"/>
+<text class="t-title" x="240.0" y="197.2" text-anchor="middle">vnet-hub-eastus</text>
+<text class="t-sub" x="240.0" y="214.8" text-anchor="middle">Contoso-Connectivity</text>
+<text class="t-sub" x="240.0" y="232.3" text-anchor="middle">eastus · 10.0.0.0/22</text>
+<text class="t-svc" x="240.0" y="249.8" text-anchor="middle">Bastion · Firewall · VPN gateway</text>
+</g>
+<g class="node node-spoke"><title>vnet-dev-eastus | Contoso-NonProduction | eastus · 10.2.0.0/16</title><rect x="23.8" y="341.5" width="202.4" height="80.6" rx="7"/>
+<text class="t-title" x="125.0" y="359.7" text-anchor="middle">vnet-dev-eastus</text>
+<text class="t-sub" x="125.0" y="377.2" text-anchor="middle">Contoso-NonProduction</text>
+<text class="t-sub" x="125.0" y="394.8" text-anchor="middle">eastus · 10.2.0.0/16</text>
+<text class="t-note warn" x="125.0" y="413.0" text-anchor="middle">egress not via firewall</text>
+</g>
+<g class="node node-spoke"><title>vnet-prd-eastus | Contoso-Production | eastus · 10.1.0.0/16</title><rect x="253.8" y="341.5" width="202.4" height="80.6" rx="7"/>
+<text class="t-title" x="355.0" y="359.7" text-anchor="middle">vnet-prd-eastus</text>
+<text class="t-sub" x="355.0" y="377.2" text-anchor="middle">Contoso-Production</text>
+<text class="t-sub" x="355.0" y="394.8" text-anchor="middle">eastus · 10.1.0.0/16</text>
+<text class="t-note ok" x="355.0" y="413.0" text-anchor="middle">egress via hub firewall</text>
+</g>
+<g class="node node-hub"><title>vnet-hub-westeurope | Contoso-Connectivity | westeurope · 10.10.0.0/22 | Firewall</title><rect x="552.8" y="179.0" width="202.4" height="96.2" rx="7"/>
+<text class="t-title" x="654.0" y="197.2" text-anchor="middle">vnet-hub-westeurope</text>
+<text class="t-sub" x="654.0" y="214.8" text-anchor="middle">Contoso-Connectivity</text>
+<text class="t-sub" x="654.0" y="232.3" text-anchor="middle">westeurope · 10.10.0.0/22</text>
+<text class="t-svc" x="654.0" y="249.8" text-anchor="middle">Firewall</text>
+</g>
+<g class="node node-spoke"><title>vnet-prd-westeurope | Contoso-Production | westeurope · 10.11.0.0/16</title><rect x="552.8" y="341.5" width="202.4" height="80.6" rx="7"/>
+<text class="t-title" x="654.0" y="359.7" text-anchor="middle">vnet-prd-westeurope</text>
+<text class="t-sub" x="654.0" y="377.2" text-anchor="middle">Contoso-Production</text>
+<text class="t-sub" x="654.0" y="394.8" text-anchor="middle">westeurope · 10.11.0.0/16</text>
+<text class="t-note ok" x="654.0" y="413.0" text-anchor="middle">egress via hub firewall</text>
+</g>
+<g class="node node-isolated"><title>vnet-dev-sandbox | Contoso-NonProduction | uksouth · 10.99.0.0/16</title><rect x="23.8" y="562.5" width="202.4" height="80.6" rx="7"/>
+<text class="t-title" x="125.0" y="580.7" text-anchor="middle">vnet-dev-sandbox</text>
+<text class="t-sub" x="125.0" y="598.2" text-anchor="middle">Contoso-NonProduction</text>
+<text class="t-sub" x="125.0" y="615.8" text-anchor="middle">uksouth · 10.99.0.0/16</text>
+<text class="t-note warn" x="125.0" y="634.0" text-anchor="middle">not peered to any network</text>
+</g>
+<g class="node node-onprem"><title>On-premises | VPN</title><rect x="138.8" y="29.5" width="202.4" height="71.5" rx="7"/>
+<text class="t-title" x="240.0" y="47.7" text-anchor="middle">On-premises</text>
+<text class="t-sub" x="240.0" y="65.2" text-anchor="middle">VPN</text>
+</g>
+<text class="t-group" x="10" y="535.2">Not attached to a hub</text>
+<line class="edge edge-hub-spoke" x1="10.0" y1="731.5" x2="46.8" y2="731.5"/><text class="edge-label" x="56.0" y="735.5">Hub-spoke peering</text>
+<line class="edge edge-hub-hub" x1="240.0" y1="731.5" x2="276.8" y2="731.5"/><text class="edge-label" x="286.0" y="735.5">Hub-to-hub peering</text>
+<line class="edge edge-spoke-spoke" x1="470.0" y1="731.5" x2="506.8" y2="731.5"/><text class="edge-label" x="516.0" y="735.5">Spoke-to-spoke peering</text>
+<line class="edge edge-onprem" x1="10.0" y1="760.1" x2="46.8" y2="760.1"/><text class="edge-label" x="56.0" y="764.1">On-premises link</text>
+</svg></div>
+      <figcaption>Network topology derived from VNet peerings (Multi-region hub-and-spoke with exceptions). Hover a network for details.</figcaption>
+    </figure>
+    
+    <h4>Evidence from the inventory</h4><ul class="env-list"><li>Hub vnet-hub-eastus (eastus, Contoso-Connectivity): address space 10.0.0.0/22; services: Azure Bastion, Azure Firewall and VPN gateway; spokes: vnet-prd-eastus and vnet-dev-eastus.</li><li>Hub vnet-hub-westeurope (westeurope, Contoso-Connectivity): address space 10.10.0.0/22; services: Azure Firewall; spokes: vnet-prd-westeurope.</li><li>Spokes vnet-prd-eastus and vnet-prd-westeurope send Internet-bound traffic to the hub firewall through a 0.0.0.0/0 route. vnet-dev-eastus has no such route, so its outbound traffic bypasses central inspection.</li><li>vnet-prd-eastus (Contoso-Production) is peered directly with vnet-dev-eastus (Contoso-NonProduction), bypassing the hub.</li><li>vnet-dev-sandbox (uksouth, Contoso-NonProduction) is not peered to any network.</li></ul>
+    
+    <div class="table-wrap env-table">
+      <table>
+        <caption>Virtual networks</caption>
+        <thead><tr><th>VNet</th><th>Role</th><th>Subscription</th><th>Region</th><th>Address space</th><th>Peered with</th><th>Default route via firewall</th></tr></thead>
+        <tbody><tr><td>vnet-hub-eastus</td><td>Hub</td><td>Contoso-Connectivity</td><td>eastus</td><td>10.0.0.0/22</td><td>vnet-dev-eastus, vnet-hub-westeurope, vnet-prd-eastus</td><td>-</td></tr><tr><td>vnet-hub-westeurope</td><td>Hub</td><td>Contoso-Connectivity</td><td>westeurope</td><td>10.10.0.0/22</td><td>vnet-hub-eastus, vnet-prd-westeurope</td><td>-</td></tr><tr><td>vnet-dev-eastus</td><td>Spoke</td><td>Contoso-NonProduction</td><td>eastus</td><td>10.2.0.0/16</td><td>vnet-hub-eastus, vnet-prd-eastus</td><td>No</td></tr><tr><td>vnet-prd-eastus</td><td>Spoke</td><td>Contoso-Production</td><td>eastus</td><td>10.1.0.0/16</td><td>vnet-dev-eastus, vnet-hub-eastus</td><td>Yes</td></tr><tr><td>vnet-prd-westeurope</td><td>Spoke</td><td>Contoso-Production</td><td>westeurope</td><td>10.11.0.0/16</td><td>vnet-hub-westeurope</td><td>Yes</td></tr><tr><td>vnet-dev-sandbox</td><td>Isolated</td><td>Contoso-NonProduction</td><td>uksouth</td><td>10.99.0.0/16</td><td>-</td><td>No</td></tr></tbody>
+      </table>
+    </div>
+    
+    <h4>Considerations against the reference architecture</h4><ul class="env-list considerations"><li>Remove direct spoke-to-spoke peerings and route that traffic through the hub firewall, particularly between production and non-production (Contoso-NonProduction and Contoso-Production).</li><li>Add a user-defined route (0.0.0.0/0 to the hub firewall) to vnet-dev-eastus so all egress is inspected.</li><li>Decide whether vnet-dev-sandbox should join the hub or be removed; unmanaged islands tend to accumulate public exposure.</li></ul>
+    
+    <div class="related"><span class="related-label">Related findings</span>
+      <a class="pill sev-High" href="#rule-SEC-007">SEC-007 · NSG exposes management ports to the Internet (2)</a>
+    </div>
+    
+  </article>
+  
+  <article class="card env arch" id="arch-hybrid">
+    <h3>2. Hybrid connectivity</h3>
+    <p class="pattern"><span class="pattern-label">Pattern identified</span> <strong>Site-to-site VPN to on-premises</strong> <span class="pill conf-High">High confidence</span></p>
+    <p>The environment connects to on-premises through a site-to-site VPN, terminated in the hub network vnet-hub-eastus. Spokes use the hub gateway through gateway transit, which is the recommended shared-gateway design.</p>
+    
+    <h4>Evidence from the inventory</h4><ul class="env-list"><li>vgw-hub-eastus: Vpn gateway, SKU VpnGw2AZ, zone-redundant, active-standby, deployed in vnet-hub-eastus.</li><li>lng-onprem-dc1: on-premises site at 203.0.113.10 advertising 192.168.0.0/16.</li><li>cn-hub-eastus-to-dc1: IPsec connection, status Connected.</li></ul>
+    
+    <h4>Considerations against the reference architecture</h4><ul class="env-list considerations"><li>Only eastus has a gateway; spokes in westeurope reach on-premises across regions, and lose on-premises connectivity if that region is unavailable. Add a gateway in each regional hub.</li><li>A single VPN tunnel runs over the Internet; for production workloads with latency or bandwidth needs, consider ExpressRoute with VPN as backup.</li><li>Configure VPN gateways as active-active with two on-premises devices to remove a single point of failure.</li></ul>
+    
+  </article>
+  
+  <article class="card env arch" id="arch-traffic">
+    <h3>3. Traffic flow and perimeter security</h3>
+    <p class="pattern"><span class="pattern-label">Pattern identified</span> <strong>Defence in depth (central firewall, WAF-protected ingress, private endpoints for PaaS, Bastion for admin access)</strong> <span class="pill conf-High">High confidence</span></p>
+    <p>Inbound: traffic enters through 1 Application Gateway (agw-prd-eastus; WAF enabled) and 1 load balancer.</p><p>Outbound and east-west: 2 Azure Firewalls (afw-hub-eastus and afw-hub-westeurope) inspect traffic; 2 spokes force Internet-bound traffic through them.</p><p>Administration: Azure Bastion (bas-hub-eastus) provides browser-based RDP/SSH without public IPs on VMs. However, some network security groups still allow RDP or SSH from the Internet.</p><p>PaaS access: 2 private endpoints connect PaaS services privately (sql-prd-01 and stprddata00). 15 services still accept public network traffic.</p>
+    
+    <h4>Evidence from the inventory</h4><ul class="env-list"><li>Web application firewall: agw-prd-eastus.</li><li>DDoS Network Protection plan: none.</li></ul>
+    
+    <h4>Considerations against the reference architecture</h4><ul class="env-list considerations"><li>Remove Internet-sourced RDP/SSH rules now that Bastion is available.</li><li>Extend private endpoints to the remaining PaaS services and disable their public network access (stprddata00, stprddata01, stprddata02, stprddata03, stprddata04 and kv-prd-00 …).</li><li>Consider DDoS Network Protection for virtual networks with Internet-facing workloads.</li></ul>
+    
+    <div class="related"><span class="related-label">Related findings</span>
+      <a class="pill sev-High" href="#rule-SEC-007">SEC-007 · NSG exposes management ports to the Internet (2)</a><a class="pill sev-Medium" href="#rule-SEC-005">SEC-005 · SQL server reachable from public networks (1)</a><a class="pill sev-High" href="#rule-SEC-002">SEC-002 · Storage account allows anonymous blob access (4)</a><a class="pill sev-High" href="#rule-SEC-006">SEC-006 · Web app does not enforce HTTPS (2)</a>
+    </div>
+    
+  </article>
+  
+  <article class="card env arch" id="arch-landing_zone">
+    <h3>4. Subscription and landing zone model</h3>
+    <p class="pattern"><span class="pattern-label">Pattern identified</span> <strong>Landing-zone style: platform and workload subscriptions, split by environment</strong> <span class="pill conf-Medium">Medium confidence</span></p>
+    <p>The 3 subscriptions in scope appear to play these roles: Contoso-Connectivity (platform: connectivity), Contoso-NonProduction (workload: non-production) and Contoso-Production (workload: production). Roles are inferred from subscription names, environment tags and the resources each contains.</p><p>Separating shared platform services (connectivity, management) from application workloads follows the Azure landing zone model in the Cloud Adoption Framework, where platform teams own the hub and workload teams own their subscriptions.</p>
+    
+    
+    
+    <div class="table-wrap env-table">
+      <table>
+        <caption>Subscription roles</caption>
+        <thead><tr><th>Subscription</th><th>Inferred role</th><th class="num">Resources</th><th>Main resource types</th></tr></thead>
+        <tbody><tr><td>Contoso-Connectivity</td><td>Platform: connectivity</td><td class="num">21</td><td>Public IP addresses (6), Network security groups (4), Virtual networks (2)</td></tr><tr><td>Contoso-NonProduction</td><td>Workload: non-production</td><td class="num">54</td><td>Managed disks (14), Virtual machines (10), Network interfaces (10)</td></tr><tr><td>Contoso-Production</td><td>Workload: production</td><td class="num">77</td><td>Managed disks (20), Virtual machines (14), Network interfaces (14)</td></tr></tbody>
+      </table>
+    </div>
+    
+    <h4>Considerations against the reference architecture</h4><ul class="env-list considerations"><li>There is no dedicated management subscription; Log Analytics workspaces sit in Contoso-NonProduction and Contoso-Production. The landing zone model places central logging, automation and backup in a management subscription.</li><li>No identity subscription was found. If domain controllers or identity services run in Azure, isolate them in a dedicated identity subscription.</li><li>Management groups, Azure Policy assignments and RBAC are not part of a resource inventory; review them separately to confirm the landing zone governance.</li></ul>
+    
+  </article>
+  
+  <article class="card env arch" id="arch-hosting">
+    <h3>5. Application hosting architecture</h3>
+    <p class="pattern"><span class="pattern-label">Pattern identified</span> <strong>Hybrid IaaS/PaaS, three-tier (web, application, data)</strong> <span class="pill conf-Medium">Medium confidence</span></p>
+    <p>Workloads run on IaaS virtual machines and App Service web apps: 24 VM-based resources and 16 managed (PaaS) services. VMs make up the majority, so the estate is primarily IaaS; much of the operating system patching, scaling and availability work remains with the customer.</p><p>Tiers identified: presentation (Application Gateway and App Service), application (VMs and App Service) and data (SQL databases and SQL servers).</p>
+    
+    <h4>Evidence from the inventory</h4><ul class="env-list"><li>Virtual machines: 24; scale sets: 0; AKS clusters: 0; web apps: 8; function apps: 0; databases and caches: 8.</li></ul>
+    
+    <h4>Considerations against the reference architecture</h4><ul class="env-list considerations"><li>No VM scale sets are used, so VM capacity does not scale automatically. Stateless tiers are good candidates for scale sets or App Service.</li><li>Review VM-hosted components for replatforming to PaaS (App Service, Azure SQL, AKS) to reduce operational overhead.</li></ul>
+    
+    <div class="related"><span class="related-label">Related findings</span>
+      <a class="pill sev-Low" href="#rule-OPS-001">OPS-001 · Previous-generation VM size (5)</a><a class="pill sev-High" href="#rule-COST-003">COST-003 · VM stopped but not deallocated (4)</a><a class="pill sev-Medium" href="#rule-COST-005">COST-005 · Empty App Service plan (2)</a>
+    </div>
+    
+  </article>
+  
+  <article class="card env arch" id="arch-resilience">
+    <h3>6. Resilience and disaster recovery</h3>
+    <p class="pattern"><span class="pattern-label">Pattern identified</span> <strong>Multi-region, but not in Azure region pairs; no DR replication evidence</strong> <span class="pill conf-Medium">Medium confidence</span></p>
+    <p>Production runs in 4 regions (eastus: 36, westeurope: 24, uksouth: 10, centralindia: 7 resources). None of these regions are paired with each other. Running in several regions only provides disaster recovery if data is replicated and workloads can fail over; the inventory shows the building blocks, not a tested failover plan.</p><p>Within regions: 9 of 24 VMs use availability zones, 3 of 10 storage accounts replicate across zones and 4 replicate to a paired region, and 1 of 6 SQL databases is zone redundant.</p><p>Backup and site recovery: 0 vaults found, so there is no evidence of Azure Backup or Azure Site Recovery protecting these workloads.</p>
+    
+    
+    
+    <h4>Considerations against the reference architecture</h4><ul class="env-list considerations"><li>Deploy Recovery Services vaults and back up VMs and databases; define RPO/RTO per workload.</li><li>Decide the DR strategy per workload (active/active, active/passive or backup-and-restore), then replicate data and test failover.</li><li>Place production VMs across availability zones (or use zone-redundant scale sets) to survive a datacenter failure.</li></ul>
+    
+    <div class="related"><span class="related-label">Related findings</span>
+      <a class="pill sev-Medium" href="#rule-REL-001">REL-001 · VM has no zone or availability set (15)</a><a class="pill sev-Low" href="#rule-REL-003">REL-003 · Storage account uses locally redundant replication (3)</a><a class="pill sev-Low" href="#rule-REL-004">REL-004 · SQL database not zone redundant (3)</a>
+    </div>
+    
+  </article>
+  
+  <article class="card env arch" id="arch-operations">
+    <h3>7. Operations and monitoring</h3>
+    <p class="pattern"><span class="pattern-label">Pattern identified</span> <strong>Federated logging (one workspace per subscription)</strong> <span class="pill conf-Medium">Medium confidence</span></p>
+    <p>Logs go to 2 Log Analytics workspaces (log-prd-01 in Contoso-Production and log-dev-01 in Contoso-NonProduction). Each subscription keeps its own workspace, which simplifies access control per environment but makes cross-environment queries and a single security view (Microsoft Sentinel) harder.</p><p>Contoso-Connectivity has no workspace of its own and must send logs elsewhere.</p><p>Automation accounts: 0. Diagnostic settings, alert rules and Azure Monitor agent coverage are not part of a resource inventory and need a separate review.</p>
+    
+    
+    
+    <h4>Considerations against the reference architecture</h4><ul class="env-list considerations"><li>The landing zone model recommends a central workspace in the management subscription, with resource-context access for workload teams.</li></ul>
+    
+    <div class="related"><span class="related-label">Related findings</span>
+      <a class="pill sev-Low" href="#rule-OPS-002">OPS-002 · Log Analytics retention below target (2)</a>
+    </div>
+    
+  </article>
+  
+</section>
 
 <section id="environment">
   <h2>Infrastructure overview</h2>
@@ -144,14 +373,14 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px
   
   <article class="card env" id="env-estate">
     <h3>1. Estate at a glance</h3>
-    <p>The environment described by sample-inventory.csv contains 133 Azure resources organised into 3 subscriptions and 19 resource groups, deployed across 4 regions. eastus is the primary region, hosting 45% of all resources, followed by westeurope (29%), uksouth (20%) and centralindia (6%).</p><p>By function, the estate is made up of compute (44%), networking (29%), application hosting (9%), storage (8%), databases (6%), security services (3%), monitoring and management (2%) and classic (legacy) resources (1%). The most common resource types are managed disks (34), virtual machines (24), network interfaces (24), storage accounts (10) and App Services (8).</p><p>The hosting model is predominantly infrastructure-as-a-service (IaaS), built around virtual machines: there are 24 virtual machines alongside 20 managed application or database services.</p>
+    <p>The environment described by sample-inventory.csv contains 152 Azure resources organised into 3 subscriptions and 23 resource groups, deployed across 5 regions. eastus is the primary region, hosting 49% of all resources, followed by westeurope (27%), uksouth (18%) and centralindia (5%).</p><p>By function, the estate is made up of compute (38%), networking (38%), application hosting (8%), storage (7%), databases (5%), security services (3%), monitoring and management (1%) and classic (legacy) resources (1%). The most common resource types are managed disks (34), virtual machines (24), network interfaces (24), storage accounts (10) and App Services (8).</p><p>The hosting model is predominantly infrastructure-as-a-service (IaaS), built around virtual machines: there are 24 virtual machines alongside 20 managed application or database services.</p>
     
     
     <div class="table-wrap env-table">
       <table>
         <caption>Resources by functional area</caption>
         <thead><tr><th>Area</th><th class="num">Resources</th><th>% of estate</th><th>Main resource types</th></tr></thead>
-        <tbody><tr><td>Compute</td><td class="num">58</td><td>44%</td><td>Managed disks (34), Virtual machines (24)</td></tr><tr><td>Networking</td><td class="num">38</td><td>29%</td><td>Network interfaces (24), Public IP addresses (6), Network security groups (4)</td></tr><tr><td>Application hosting</td><td class="num">12</td><td>9%</td><td>App Services (8), App Service plans (4)</td></tr><tr><td>Storage</td><td class="num">10</td><td>8%</td><td>Storage accounts (10)</td></tr><tr><td>Databases</td><td class="num">8</td><td>6%</td><td>SQL databases (6), SQL servers (2)</td></tr><tr><td>Security services</td><td class="num">4</td><td>3%</td><td>Key vaults (4)</td></tr><tr><td>Monitoring and management</td><td class="num">2</td><td>2%</td><td>Log Analytics workspaces (2)</td></tr><tr><td>Classic (legacy) resources</td><td class="num">1</td><td>1%</td><td>Classic cloud services (1)</td></tr></tbody>
+        <tbody><tr><td>Compute</td><td class="num">58</td><td>38%</td><td>Managed disks (34), Virtual machines (24)</td></tr><tr><td>Networking</td><td class="num">57</td><td>38%</td><td>Network interfaces (24), Network security groups (7), Virtual networks (6)</td></tr><tr><td>Application hosting</td><td class="num">12</td><td>8%</td><td>App Services (8), App Service plans (4)</td></tr><tr><td>Storage</td><td class="num">10</td><td>7%</td><td>Storage accounts (10)</td></tr><tr><td>Databases</td><td class="num">8</td><td>5%</td><td>SQL databases (6), SQL servers (2)</td></tr><tr><td>Security services</td><td class="num">4</td><td>3%</td><td>Key vaults (4)</td></tr><tr><td>Monitoring and management</td><td class="num">2</td><td>1%</td><td>Log Analytics workspaces (2)</td></tr><tr><td>Classic (legacy) resources</td><td class="num">1</td><td>1%</td><td>Classic cloud services (1)</td></tr></tbody>
       </table>
     </div>
     
@@ -160,14 +389,14 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px
   
   <article class="card env" id="env-subscriptions">
     <h3>2. Subscriptions and resource organisation</h3>
-    <p>Resources are spread across 3 subscriptions. The breakdown below describes what each subscription contains, which helps show how workloads and environments are separated.</p><p>On average a resource group holds 7.0 resources. The largest are rg-prd-app01 in Contoso-Production (18), rg-dev-app01 in Contoso-NonProduction (13) and rg-prd-app02 in Contoso-Production (12).</p>
-    <ul class="env-list"><li><strong>Contoso-Production:</strong> 66 resources in 8 resource groups across 4 regions (centralindia, eastus, uksouth and westeurope). It mainly contains managed disks (20), virtual machines (14) and network interfaces (14). Resources are tagged as environment &#39;prod&#39;.</li><li><strong>Contoso-NonProduction:</strong> 52 resources in 8 resource groups across 4 regions (centralindia, eastus, uksouth and westeurope). It mainly contains managed disks (14), virtual machines (10) and network interfaces (10). Resources are tagged as environment &#39;dev&#39;.</li><li><strong>Contoso-Connectivity:</strong> 15 resources in 3 resource groups across 2 regions (eastus and westeurope). It mainly contains public IP addresses (6), network security groups (4) and virtual networks (2). Resources are tagged as environment &#39;shared&#39;.</li></ul>
+    <p>Resources are spread across 3 subscriptions. The breakdown below describes what each subscription contains, which helps show how workloads and environments are separated.</p><p>On average a resource group holds 6.6 resources. The largest are rg-prd-app01 in Contoso-Production (19), rg-dev-app01 in Contoso-NonProduction (13) and rg-prd-app02 in Contoso-Production (12).</p>
+    <ul class="env-list"><li><strong>Contoso-Production:</strong> 77 resources in 9 resource groups across 4 regions (centralindia, eastus, uksouth and westeurope). It mainly contains managed disks (20), virtual machines (14) and network interfaces (14). Resources are tagged as environment &#39;prod&#39;.</li><li><strong>Contoso-NonProduction:</strong> 54 resources in 10 resource groups across 4 regions (centralindia, eastus, uksouth and westeurope). It mainly contains managed disks (14), virtual machines (10) and network interfaces (10). Resources are tagged as environment &#39;dev&#39;.</li><li><strong>Contoso-Connectivity:</strong> 21 resources in 4 resource groups across 3 regions (eastus, global and westeurope). It mainly contains public IP addresses (6), network security groups (4) and virtual networks (2). Resources are tagged as environment &#39;shared&#39;.</li></ul>
     
     <div class="table-wrap env-table">
       <table>
         <caption>Subscription summary</caption>
         <thead><tr><th>Subscription</th><th class="num">Resources</th><th class="num">Resource groups</th><th>Regions</th><th>Main resource types</th></tr></thead>
-        <tbody><tr><td>Contoso-Production</td><td class="num">66</td><td class="num">8</td><td>centralindia, eastus, uksouth, westeurope</td><td>Managed disks (20), Virtual machines (14), Network interfaces (14)</td></tr><tr><td>Contoso-NonProduction</td><td class="num">52</td><td class="num">8</td><td>centralindia, eastus, uksouth, westeurope</td><td>Managed disks (14), Virtual machines (10), Network interfaces (10)</td></tr><tr><td>Contoso-Connectivity</td><td class="num">15</td><td class="num">3</td><td>eastus, westeurope</td><td>Public IP addresses (6), Network security groups (4), Virtual networks (2)</td></tr></tbody>
+        <tbody><tr><td>Contoso-Production</td><td class="num">77</td><td class="num">9</td><td>centralindia, eastus, uksouth, westeurope</td><td>Managed disks (20), Virtual machines (14), Network interfaces (14)</td></tr><tr><td>Contoso-NonProduction</td><td class="num">54</td><td class="num">10</td><td>centralindia, eastus, uksouth, westeurope</td><td>Managed disks (14), Virtual machines (10), Network interfaces (10)</td></tr><tr><td>Contoso-Connectivity</td><td class="num">21</td><td class="num">4</td><td>eastus, global, westeurope</td><td>Public IP addresses (6), Network security groups (4), Virtual networks (2)</td></tr></tbody>
       </table>
     </div>
     
@@ -176,14 +405,14 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px
   
   <article class="card env" id="env-regions">
     <h3>3. Regional footprint</h3>
-    <p>Resources are deployed in 4 regions: eastus (60), westeurope (39), uksouth (26) and centralindia (8). Running in several regions gives the option of regional resilience, but only if workloads are actually designed to fail over between them.</p><p>The approved regions are eastus, westeurope and uksouth. 8 resources sit outside them, in centralindia (8).</p>
+    <p>Resources are deployed in 5 regions: eastus (74), westeurope (41), uksouth (27), centralindia (8) and global (2). Running in several regions gives the option of regional resilience, but only if workloads are actually designed to fail over between them.</p><p>The approved regions are eastus, westeurope and uksouth. 8 resources sit outside them, in centralindia (8).</p>
     
     
     <div class="table-wrap env-table">
       <table>
         <caption>Resources by region</caption>
         <thead><tr><th>Region</th><th class="num">Resources</th><th>% of estate</th><th>Main areas</th></tr></thead>
-        <tbody><tr><td>eastus</td><td class="num">60</td><td>45%</td><td>Compute (25), Networking (18), Application hosting (7)</td></tr><tr><td>westeurope</td><td class="num">39</td><td>29%</td><td>Compute (14), Networking (12), Storage (5)</td></tr><tr><td>uksouth</td><td class="num">26</td><td>20%</td><td>Compute (15), Networking (7), Databases (2)</td></tr><tr><td>centralindia</td><td class="num">8</td><td>6%</td><td>Compute (4), Storage (2), Networking (1)</td></tr></tbody>
+        <tbody><tr><td>eastus</td><td class="num">74</td><td>49%</td><td>Networking (32), Compute (25), Application hosting (7)</td></tr><tr><td>westeurope</td><td class="num">41</td><td>27%</td><td>Compute (14), Networking (14), Storage (5)</td></tr><tr><td>uksouth</td><td class="num">27</td><td>18%</td><td>Compute (15), Networking (8), Databases (2)</td></tr><tr><td>centralindia</td><td class="num">8</td><td>5%</td><td>Compute (4), Storage (2), Networking (1)</td></tr><tr><td>global</td><td class="num">2</td><td>1%</td><td>Networking (2)</td></tr></tbody>
       </table>
     </div>
     
@@ -216,14 +445,14 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px
   
   <article class="card env" id="env-network">
     <h3>5. Networking</h3>
-    <p>The network layer consists of 38 resources: Network interfaces (24), Public IP addresses (6), Network security groups (4), Virtual networks (2) and Azure Firewalls (2).</p><p>There are 2 virtual networks in eastus and westeurope. The naming (vnet-hub-eastus and vnet-hub-westeurope) and the Azure Firewall deployment (afw-hub-eastus and afw-hub-westeurope) indicate a hub-and-spoke design, where shared connectivity and traffic inspection are centralised in a hub network.</p><p>Traffic filtering uses 4 network security groups with 6 custom rules between them. Some NSGs allow RDP or SSH from the Internet (see related findings).</p><p>6 public IP addresses are allocated; 2 of them are not associated with any resource.</p>
+    <p>The network layer consists of 57 resources: Network interfaces (24), Network security groups (7), Virtual networks (6), Public IP addresses (6), Azure Firewalls (2), routetables (2), privateendpoints (2), privatednszones (2), virtualnetworkgateways (1), localnetworkgateways (1), connections (1), bastionhosts (1), Application gateways (1) and Load balancers (1).</p><p>There are 6 virtual networks in eastus, uksouth and westeurope, with 2 Azure Firewalls deployed. How these networks connect to each other (the topology) is assessed in the Architecture assessment section.</p><p>Traffic filtering uses 7 network security groups with 9 custom rules between them. Some NSGs allow RDP or SSH from the Internet (see related findings).</p><p>6 public IP addresses are allocated; 2 of them are not associated with any resource.</p>
     
     
     <div class="table-wrap env-table">
       <table>
         <caption>Network resources</caption>
         <thead><tr><th>Resource type</th><th class="num">Count</th><th>Regions</th></tr></thead>
-        <tbody><tr><td>Network interfaces</td><td class="num">24</td><td>centralindia, eastus, uksouth, westeurope</td></tr><tr><td>Public IP addresses</td><td class="num">6</td><td>eastus, westeurope</td></tr><tr><td>Network security groups</td><td class="num">4</td><td>eastus, westeurope</td></tr><tr><td>Virtual networks</td><td class="num">2</td><td>eastus, westeurope</td></tr><tr><td>Azure Firewalls</td><td class="num">2</td><td>eastus, westeurope</td></tr></tbody>
+        <tbody><tr><td>Network interfaces</td><td class="num">24</td><td>centralindia, eastus, uksouth, westeurope</td></tr><tr><td>Network security groups</td><td class="num">7</td><td>eastus, westeurope</td></tr><tr><td>Virtual networks</td><td class="num">6</td><td>eastus, uksouth, westeurope</td></tr><tr><td>Public IP addresses</td><td class="num">6</td><td>eastus, westeurope</td></tr><tr><td>Azure Firewalls</td><td class="num">2</td><td>eastus, westeurope</td></tr><tr><td>routetables</td><td class="num">2</td><td>eastus, westeurope</td></tr><tr><td>privateendpoints</td><td class="num">2</td><td>eastus</td></tr><tr><td>privatednszones</td><td class="num">2</td><td>global</td></tr><tr><td>virtualnetworkgateways</td><td class="num">1</td><td>eastus</td></tr><tr><td>localnetworkgateways</td><td class="num">1</td><td>eastus</td></tr><tr><td>connections</td><td class="num">1</td><td>eastus</td></tr><tr><td>bastionhosts</td><td class="num">1</td><td>eastus</td></tr><tr><td>Application gateways</td><td class="num">1</td><td>eastus</td></tr><tr><td>Load balancers</td><td class="num">1</td><td>eastus</td></tr></tbody>
       </table>
     </div>
     
@@ -304,14 +533,14 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px
   
   <article class="card env" id="env-governance">
     <h3>11. Governance and tagging</h3>
-    <p>116 of 133 resources (87%) carry at least one tag, and 74% carry all of the required tags (environment, owner and costCenter).</p><p>In total 3 distinct tag keys are in use, most often costCenter (107), environment (106) and owner (106).</p><p>1 resource still uses the classic (Azure Service Manager) deployment model (legacy-cloudservice). This model is retired, so it needs migrating to Azure Resource Manager.</p>
+    <p>135 of 152 resources (89%) carry at least one tag, and 78% carry all of the required tags (environment, owner and costCenter).</p><p>In total 3 distinct tag keys are in use, most often costCenter (126), environment (125) and owner (125).</p><p>1 resource still uses the classic (Azure Service Manager) deployment model (legacy-cloudservice). This model is retired, so it needs migrating to Azure Resource Manager.</p>
     
     
     <div class="table-wrap env-table">
       <table>
         <caption>Required tag coverage</caption>
         <thead><tr><th>Tag</th><th class="num">Resources tagged</th><th>Coverage</th><th>Most common values</th></tr></thead>
-        <tbody><tr><td>environment</td><td class="num">106</td><td>80%</td><td>prod (52), dev (42), shared (12)</td></tr><tr><td>owner</td><td class="num">106</td><td>80%</td><td>app-team (37), platform (35), data-team (34)</td></tr><tr><td>costCenter</td><td class="num">107</td><td>80%</td><td>CC300 (39), CC200 (35), CC100 (33)</td></tr></tbody>
+        <tbody><tr><td>environment</td><td class="num">125</td><td>82%</td><td>prod (63), dev (44), shared (18)</td></tr><tr><td>owner</td><td class="num">125</td><td>82%</td><td>app-team (44), platform (44), data-team (37)</td></tr><tr><td>costCenter</td><td class="num">126</td><td>83%</td><td>CC300 (43), CC200 (42), CC100 (41)</td></tr></tbody>
       </table>
     </div>
     
@@ -340,7 +569,11 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px
       
         <li title="App Services: 8"><span class="lbl">App Services</span><span class="track"><span class="fill" style="display:block;width:23.5%"></span></span><span class="val">8</span></li>
       
+        <li title="Network security groups: 7"><span class="lbl">Network security groups</span><span class="track"><span class="fill" style="display:block;width:20.6%"></span></span><span class="val">7</span></li>
+      
         <li title="SQL databases: 6"><span class="lbl">SQL databases</span><span class="track"><span class="fill" style="display:block;width:17.6%"></span></span><span class="val">6</span></li>
+      
+        <li title="Virtual networks: 6"><span class="lbl">Virtual networks</span><span class="track"><span class="fill" style="display:block;width:17.6%"></span></span><span class="val">6</span></li>
       
         <li title="Public IP addresses: 6"><span class="lbl">Public IP addresses</span><span class="track"><span class="fill" style="display:block;width:17.6%"></span></span><span class="val">6</span></li>
       
@@ -348,33 +581,31 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px
       
         <li title="App Service plans: 4"><span class="lbl">App Service plans</span><span class="track"><span class="fill" style="display:block;width:11.8%"></span></span><span class="val">4</span></li>
       
-        <li title="Network security groups: 4"><span class="lbl">Network security groups</span><span class="track"><span class="fill" style="display:block;width:11.8%"></span></span><span class="val">4</span></li>
-      
         <li title="SQL servers: 2"><span class="lbl">SQL servers</span><span class="track"><span class="fill" style="display:block;width:5.9%"></span></span><span class="val">2</span></li>
-      
-        <li title="Log Analytics workspaces: 2"><span class="lbl">Log Analytics workspaces</span><span class="track"><span class="fill" style="display:block;width:5.9%"></span></span><span class="val">2</span></li>
       </ul>
     </div>
     
     <div class="card"><h3 style="margin-top:0">Resources by region</h3>
       <ul class="bars">
-        <li title="eastus: 60"><span class="lbl">eastus</span><span class="track"><span class="fill" style="display:block;width:100.0%"></span></span><span class="val">60</span></li>
+        <li title="eastus: 74"><span class="lbl">eastus</span><span class="track"><span class="fill" style="display:block;width:100.0%"></span></span><span class="val">74</span></li>
       
-        <li title="westeurope: 39"><span class="lbl">westeurope</span><span class="track"><span class="fill" style="display:block;width:65.0%"></span></span><span class="val">39</span></li>
+        <li title="westeurope: 41"><span class="lbl">westeurope</span><span class="track"><span class="fill" style="display:block;width:55.4%"></span></span><span class="val">41</span></li>
       
-        <li title="uksouth: 26"><span class="lbl">uksouth</span><span class="track"><span class="fill" style="display:block;width:43.3%"></span></span><span class="val">26</span></li>
+        <li title="uksouth: 27"><span class="lbl">uksouth</span><span class="track"><span class="fill" style="display:block;width:36.5%"></span></span><span class="val">27</span></li>
       
-        <li title="centralindia: 8"><span class="lbl">centralindia</span><span class="track"><span class="fill" style="display:block;width:13.3%"></span></span><span class="val">8</span></li>
+        <li title="centralindia: 8"><span class="lbl">centralindia</span><span class="track"><span class="fill" style="display:block;width:10.8%"></span></span><span class="val">8</span></li>
+      
+        <li title="global: 2"><span class="lbl">global</span><span class="track"><span class="fill" style="display:block;width:2.7%"></span></span><span class="val">2</span></li>
       </ul>
     </div>
     
     <div class="card"><h3 style="margin-top:0">Resources by subscription</h3>
       <ul class="bars">
-        <li title="Contoso-Production: 66"><span class="lbl">Contoso-Production</span><span class="track"><span class="fill" style="display:block;width:100.0%"></span></span><span class="val">66</span></li>
+        <li title="Contoso-Production: 77"><span class="lbl">Contoso-Production</span><span class="track"><span class="fill" style="display:block;width:100.0%"></span></span><span class="val">77</span></li>
       
-        <li title="Contoso-NonProduction: 52"><span class="lbl">Contoso-NonProduction</span><span class="track"><span class="fill" style="display:block;width:78.8%"></span></span><span class="val">52</span></li>
+        <li title="Contoso-NonProduction: 54"><span class="lbl">Contoso-NonProduction</span><span class="track"><span class="fill" style="display:block;width:70.1%"></span></span><span class="val">54</span></li>
       
-        <li title="Contoso-Connectivity: 15"><span class="lbl">Contoso-Connectivity</span><span class="track"><span class="fill" style="display:block;width:22.7%"></span></span><span class="val">15</span></li>
+        <li title="Contoso-Connectivity: 21"><span class="lbl">Contoso-Connectivity</span><span class="track"><span class="fill" style="display:block;width:27.3%"></span></span><span class="val">21</span></li>
       </ul>
     </div>
     
@@ -387,8 +618,8 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px
     <table>
       <thead><tr><th>Pillar</th><th class="num">Score</th><th>Rating</th><th class="num">Checks</th><th class="num">High</th><th class="num">Medium</th><th class="num">Low</th></tr></thead>
       <tbody>
-        <tr><td>Security</td><td class="num"><strong>65</strong></td>
-          <td><span class="pill r-Fair">Fair</span></td><td class="num">48</td>
+        <tr><td>Security</td><td class="num"><strong>68</strong></td>
+          <td><span class="pill r-Fair">Fair</span></td><td class="num">51</td>
           <td class="num">12</td><td class="num">4</td><td class="num">0</td></tr>
       
         <tr><td>Reliability</td><td class="num"><strong>75</strong></td>
@@ -403,8 +634,8 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px
           <td><span class="pill r-Fair">Fair</span></td><td class="num">26</td>
           <td class="num">0</td><td class="num">0</td><td class="num">7</td></tr>
       
-        <tr><td>Governance</td><td class="num"><strong>84</strong></td>
-          <td><span class="pill r-Good">Good</span></td><td class="num">267</td>
+        <tr><td>Governance</td><td class="num"><strong>86</strong></td>
+          <td><span class="pill r-Good">Good</span></td><td class="num">305</td>
           <td class="num">1</td><td class="num">42</td><td class="num">0</td></tr>
       </tbody>
     </table>
@@ -442,7 +673,7 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px
     
     <div class="rule High" id="rule-SEC-007">
       <div><strong>SEC-007 · NSG exposes management ports to the Internet</strong> <span class="pill sev-High">High</span></div>
-      <div class="meta">2 of 4 evaluated resources · e.g. nsg-mgmt-eastus, nsg-mgmt-westeurope</div>
+      <div class="meta">2 of 7 evaluated resources · e.g. nsg-mgmt-eastus, nsg-mgmt-westeurope</div>
       <div><strong>Recommendation:</strong> Remove Internet-sourced RDP/SSH rules; use Azure Bastion or Just-in-Time VM access.</div>
       <div class="meta">Context: <a href="#env-network">5. Networking</a> in the infrastructure overview</div>
     </div>
@@ -571,14 +802,14 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px
     
     <div class="rule Medium" id="rule-GOV-001">
       <div><strong>GOV-001 · Required tags missing</strong> <span class="pill sev-Medium">Medium</span></div>
-      <div class="meta">34 of 133 evaluated resources · e.g. app-prd-01, asp-dev-00, asp-dev-01, disk-dev-orphan-0, disk-prd-orphan-3 …</div>
+      <div class="meta">34 of 152 evaluated resources · e.g. app-prd-01, asp-dev-00, asp-dev-01, disk-dev-orphan-0, disk-prd-orphan-3 …</div>
       <div><strong>Recommendation:</strong> Enforce the tagging standard with Azure Policy (Require/Inherit a tag) and back-fill existing resources.</div>
       <div class="meta">Context: <a href="#env-governance">11. Governance and tagging</a> in the infrastructure overview</div>
     </div>
     
     <div class="rule Medium" id="rule-GOV-002">
       <div><strong>GOV-002 · Resource outside approved regions</strong> <span class="pill sev-Medium">Medium</span></div>
-      <div class="meta">8 of 133 evaluated resources · e.g. disk-dev-orphan-2, disk-prd-orphan-3, nic-prd-012, sql-prd-01, stprddata00 …</div>
+      <div class="meta">8 of 152 evaluated resources · e.g. disk-dev-orphan-2, disk-prd-orphan-3, nic-prd-012, sql-prd-01, stprddata00 …</div>
       <div><strong>Recommendation:</strong> Apply the &#39;Allowed locations&#39; policy and plan migration of out-of-policy resources.</div>
       <div class="meta">Context: <a href="#env-regions">3. Regional footprint</a> in the infrastructure overview</div>
     </div>
@@ -1048,7 +1279,7 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px
 </section>
 
 <section id="resources">
-  <h2>Resource inventory <span class="muted" style="font-size:15px">(133)</span></h2>
+  <h2>Resource inventory <span class="muted" style="font-size:15px">(152)</span></h2>
   <div class="filters" data-for="resources-table">
     <input type="search" placeholder="Search resources…" aria-label="Search resources">
   </div>
@@ -1056,9 +1287,29 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px
     <table id="resources-table" class="sortable">
       <thead><tr><th>Name</th><th>Type</th><th>Resource group</th><th>Location</th><th>Subscription</th><th>SKU</th><th>Tags</th></tr></thead>
       <tbody>
-        <tr><td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-hub-eastus/providers/Microsoft.Network/azureFirewalls/afw-hub-eastus">afw-hub-eastus</td><td>Azure Firewalls</td><td>rg-hub-eastus</td><td>eastus</td>
+        <tr><td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-dns/providers/Microsoft.Network/privateDnsZones/privatelink.blob.core.windows.net">privatelink.blob.core.windows.net</td><td>privatednszones</td><td>rg-dns</td><td>global</td>
           <td>Contoso-Connectivity</td><td></td>
+          <td class="muted">environment=shared, owner=app-team, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-dns/providers/Microsoft.Network/privateDnsZones/privatelink.database.windows.net">privatelink.database.windows.net</td><td>privatednszones</td><td>rg-dns</td><td>global</td>
+          <td>Contoso-Connectivity</td><td></td>
+          <td class="muted">environment=shared, owner=app-team, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-hub-eastus/providers/Microsoft.Network/azureFirewalls/afw-hub-eastus">afw-hub-eastus</td><td>Azure Firewalls</td><td>rg-hub-eastus</td><td>eastus</td>
+          <td>Contoso-Connectivity</td><td>AZFW_VNet</td>
           <td class="muted">environment=shared, owner=data-team, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-hub-eastus/providers/Microsoft.Network/bastionHosts/bas-hub-eastus">bas-hub-eastus</td><td>bastionhosts</td><td>rg-hub-eastus</td><td>eastus</td>
+          <td>Contoso-Connectivity</td><td>Standard</td>
+          <td class="muted">environment=shared, owner=platform, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-hub-eastus/providers/Microsoft.Network/connections/cn-hub-eastus-to-dc1">cn-hub-eastus-to-dc1</td><td>connections</td><td>rg-hub-eastus</td><td>eastus</td>
+          <td>Contoso-Connectivity</td><td></td>
+          <td class="muted">environment=shared, owner=platform, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-hub-eastus/providers/Microsoft.Network/localNetworkGateways/lng-onprem-dc1">lng-onprem-dc1</td><td>localnetworkgateways</td><td>rg-hub-eastus</td><td>eastus</td>
+          <td>Contoso-Connectivity</td><td></td>
+          <td class="muted">environment=shared, owner=app-team, costCenter=CC100</td></tr>
       
         <tr><td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-hub-eastus/providers/Microsoft.Network/networkSecurityGroups/nsg-app-eastus">nsg-app-eastus</td><td>Network security groups</td><td>rg-hub-eastus</td><td>eastus</td>
           <td>Contoso-Connectivity</td><td></td>
@@ -1080,12 +1331,16 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px
           <td>Contoso-Connectivity</td><td>Standard</td>
           <td class="muted">costCenter=CC100</td></tr>
       
+        <tr><td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-hub-eastus/providers/Microsoft.Network/virtualNetworkGateways/vgw-hub-eastus">vgw-hub-eastus</td><td>virtualnetworkgateways</td><td>rg-hub-eastus</td><td>eastus</td>
+          <td>Contoso-Connectivity</td><td>VpnGw2AZ</td>
+          <td class="muted">environment=shared, owner=platform, costCenter=CC100</td></tr>
+      
         <tr><td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-hub-eastus/providers/Microsoft.Network/virtualNetworks/vnet-hub-eastus">vnet-hub-eastus</td><td>Virtual networks</td><td>rg-hub-eastus</td><td>eastus</td>
           <td>Contoso-Connectivity</td><td></td>
           <td class="muted">environment=shared, owner=app-team, costCenter=CC100</td></tr>
       
         <tr><td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-hub-westeurope/providers/Microsoft.Network/azureFirewalls/afw-hub-westeurope">afw-hub-westeurope</td><td>Azure Firewalls</td><td>rg-hub-westeurope</td><td>westeurope</td>
-          <td>Contoso-Connectivity</td><td></td>
+          <td>Contoso-Connectivity</td><td>AZFW_VNet</td>
           <td class="muted">environment=shared, owner=app-team, costCenter=CC200</td></tr>
       
         <tr><td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-hub-westeurope/providers/Microsoft.Network/networkSecurityGroups/nsg-app-westeurope">nsg-app-westeurope</td><td>Network security groups</td><td>rg-hub-westeurope</td><td>westeurope</td>
@@ -1292,6 +1547,14 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px
           <td>Contoso-NonProduction</td><td></td>
           <td class="muted">environment=dev, owner=platform, costCenter=CC300</td></tr>
       
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-network/providers/Microsoft.Network/virtualNetworks/vnet-dev-eastus">vnet-dev-eastus</td><td>Virtual networks</td><td>rg-dev-network</td><td>eastus</td>
+          <td>Contoso-NonProduction</td><td></td>
+          <td class="muted">environment=dev, owner=data-team, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-sandbox/providers/Microsoft.Network/virtualNetworks/vnet-dev-sandbox">vnet-dev-sandbox</td><td>Virtual networks</td><td>rg-dev-sandbox</td><td>uksouth</td>
+          <td>Contoso-NonProduction</td><td></td>
+          <td class="muted">environment=dev, owner=app-team, costCenter=CC300</td></tr>
+      
         <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-sec/providers/Microsoft.KeyVault/vaults/kv-dev-00">kv-dev-00</td><td>Key vaults</td><td>rg-dev-sec</td><td>westeurope</td>
           <td>Contoso-NonProduction</td><td></td>
           <td class="muted">environment=dev, owner=platform, costCenter=CC100</td></tr>
@@ -1347,6 +1610,10 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px
         <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app01/providers/Microsoft.Compute/disks/disk-prd-orphan-5">disk-prd-orphan-5</td><td>Managed disks</td><td>rg-prd-app01</td><td>westeurope</td>
           <td>Contoso-Production</td><td>Premium_LRS</td>
           <td class="muted">environment=prod, owner=data-team, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app01/providers/Microsoft.Network/loadBalancers/lbi-prd-app">lbi-prd-app</td><td>Load balancers</td><td>rg-prd-app01</td><td>eastus</td>
+          <td>Contoso-Production</td><td>Standard</td>
+          <td class="muted">environment=prod, owner=app-team, costCenter=CC200</td></tr>
       
         <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app01/providers/Microsoft.Network/networkInterfaces/nic-prd-000">nic-prd-000</td><td>Network interfaces</td><td>rg-prd-app01</td><td>westeurope</td>
           <td>Contoso-Production</td><td></td>
@@ -1556,6 +1823,42 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px
           <td>Contoso-Production</td><td></td>
           <td class="muted">environment=prod, owner=app-team, costCenter=CC100</td></tr>
       
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-network/providers/Microsoft.Network/networkSecurityGroups/nsg-prd-app">nsg-prd-app</td><td>Network security groups</td><td>rg-prd-network</td><td>eastus</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=app-team, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-network/providers/Microsoft.Network/networkSecurityGroups/nsg-prd-data">nsg-prd-data</td><td>Network security groups</td><td>rg-prd-network</td><td>eastus</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=app-team, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-network/providers/Microsoft.Network/networkSecurityGroups/nsg-prd-web">nsg-prd-web</td><td>Network security groups</td><td>rg-prd-network</td><td>eastus</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=data-team, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-network/providers/Microsoft.Network/privateEndpoints/pe-sql-prd-01">pe-sql-prd-01</td><td>privateendpoints</td><td>rg-prd-network</td><td>eastus</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=data-team, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-network/providers/Microsoft.Network/privateEndpoints/pe-stprddata00-blob">pe-stprddata00-blob</td><td>privateendpoints</td><td>rg-prd-network</td><td>eastus</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=platform, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-network/providers/Microsoft.Network/routeTables/rt-prd-eastus">rt-prd-eastus</td><td>routetables</td><td>rg-prd-network</td><td>eastus</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=platform, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-network/providers/Microsoft.Network/routeTables/rt-prd-weu">rt-prd-weu</td><td>routetables</td><td>rg-prd-network</td><td>westeurope</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=platform, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-network/providers/Microsoft.Network/virtualNetworks/vnet-prd-eastus">vnet-prd-eastus</td><td>Virtual networks</td><td>rg-prd-network</td><td>eastus</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=platform, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-network/providers/Microsoft.Network/virtualNetworks/vnet-prd-westeurope">vnet-prd-westeurope</td><td>Virtual networks</td><td>rg-prd-network</td><td>westeurope</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=platform, costCenter=CC200</td></tr>
+      
         <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-sec/providers/Microsoft.KeyVault/vaults/kv-prd-00">kv-prd-00</td><td>Key vaults</td><td>rg-prd-sec</td><td>eastus</td>
           <td>Contoso-Production</td><td></td>
           <td class="muted"></td></tr>
@@ -1563,6 +1866,10 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px
         <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-sec/providers/Microsoft.KeyVault/vaults/kv-prd-01">kv-prd-01</td><td>Key vaults</td><td>rg-prd-sec</td><td>westeurope</td>
           <td>Contoso-Production</td><td></td>
           <td class="muted">environment=prod, owner=app-team</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-web/providers/Microsoft.Network/applicationGateways/agw-prd-eastus">agw-prd-eastus</td><td>Application gateways</td><td>rg-prd-web</td><td>eastus</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=platform, costCenter=CC100</td></tr>
       
         <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-web/providers/Microsoft.Web/sites/app-prd-00">app-prd-00</td><td>App Services</td><td>rg-prd-web</td><td>eastus</td>
           <td>Contoso-Production</td><td></td>

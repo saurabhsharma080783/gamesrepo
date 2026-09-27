@@ -6,9 +6,25 @@ It only reads the files you give it.
 
 | Format | Audience | Contents |
 |---|---|---|
-| **Word (.docx)** | Full written report | Cover, table of contents, executive summary, scope & methodology, data coverage, infrastructure overview, inventory charts, findings by pillar, 30/60/90-day roadmap, appendices (all findings and full inventory) |
+| **Word (.docx)** | Full written report | Cover, table of contents, executive summary, scope & methodology, data coverage, architecture assessment with network topology diagram, infrastructure overview, inventory charts, findings by pillar, 30/60/90-day roadmap, appendices (all findings and full inventory) |
 | **PowerPoint (.pptx)**, optional (`-f docx,html,pptx`) | Executive briefing | 16:9 deck: title, agenda, KPIs, scope, data coverage, inventory, scorecard, findings, roadmap, next steps |
-| **HTML** | Interactive, shareable | Self-contained single file: KPIs, posture score, infrastructure overview, charts, scorecard, findings, roadmap, searchable/sortable tables, light/dark theme |
+| **HTML** | Interactive, shareable | Self-contained single file: KPIs, posture score, architecture assessment with topology diagram, infrastructure overview, charts, scorecard, findings, roadmap, searchable/sortable tables, light/dark theme |
+
+The **architecture assessment** identifies the patterns the environment follows and compares them with
+Microsoft's reference architectures (Cloud Adoption Framework landing zone, Well-Architected Framework):
+
+| Area | What it identifies |
+|---|---|
+| Network topology | Hub-and-spoke (single or multi-region), Virtual WAN, mesh, ad-hoc or isolated VNets, from actual VNet peerings; hub services (firewall, gateway, Bastion); spoke-to-spoke peerings; unpeered VNets; whether spokes route egress through the firewall. Drawn as a topology diagram |
+| Hybrid connectivity | Site-to-site VPN, ExpressRoute or cloud-only; gateway SKU, zone redundancy, active-active |
+| Traffic flow and perimeter security | Ingress (Application Gateway/WAF, Front Door), egress inspection, Bastion, private endpoints, DDoS protection |
+| Subscription and landing zone model | Platform (connectivity, management, identity) vs workload subscriptions, split by environment |
+| Application hosting | IaaS, PaaS, containers or serverless; web/application/data tiers |
+| Resilience and disaster recovery | Region footprint and Azure region pairs, zone usage, replication, backup vaults |
+| Operations and monitoring | Centralised or federated Log Analytics |
+
+Each area states the pattern identified with a confidence level (High: direct configuration evidence;
+Medium: inferred from types and naming; Low: data missing), the evidence, and considerations.
 
 The **infrastructure overview** describes the environment in plain English, area by area:
 estate at a glance, subscriptions, regional footprint, compute, networking, storage, databases,

@@ -91,7 +91,7 @@ def test_generate_all_reports(tmp_path):
 
     d = docx.Document(out["docx"])
     headings = [p.text for p in d.paragraphs if p.style.name.startswith("Heading")]
-    assert "1. Executive summary" in headings and "6. Remediation roadmap" in headings and "3. Infrastructure overview" in headings
+    assert "1. Executive summary" in headings and "7. Remediation roadmap" in headings and "3. Architecture assessment" in headings
     assert len(d.inline_shapes) >= 4  # charts embedded
 
     prs = pptx.Presentation(out["pptx"])
@@ -224,7 +224,7 @@ def test_narrative_covers_estate_and_links_findings():
     assert {"estate", "subscriptions", "regions", "compute", "network", "storage", "data", "web",
             "security", "monitoring", "governance"} <= set(secs)
     text = " ".join(p for s in secs.values() for p in s.paragraphs + s.bullets)
-    assert "133 Azure resources" in text and "hub-and-spoke" in text
+    assert "152 Azure resources" in text
     assert "stopped but still allocated" in text and "unattached disks" in text
     assert {r.rule.id for r in secs["compute"].related} >= {"REL-001", "COST-001", "COST-003"}
     assert {r.rule.id for r in secs["regions"].related} == {"GOV-002"}
@@ -253,7 +253,86 @@ def test_reports_include_infrastructure_overview(tmp_path):
     assert 'id="environment"' in html and 'href="#rule-SEC-007"' in html and 'id="rule-SEC-007"' in html
     d = docx.Document(out["docx"])
     heads = [p.text for p in d.paragraphs if p.style.name.startswith("Heading")]
-    i3, i4 = heads.index("3. Infrastructure overview"), heads.index("4. Inventory charts and statistics")
+    i3, i4 = heads.index("4. Infrastructure overview"), heads.index("5. Inventory charts and statistics")
     assert i4 - i3 >= 10  # one subsection per area
     body = "\n".join(p.text for p in d.paragraphs)
-    assert "(see 5.1 Security)" in body and "Context: see 3." in body
+    assert "(see 6.1 Security)" in body and "Context: see 4." in body
+
+
+# ---- architecture assessment -------------------------------------------------
+
+def _arch(resources, cfg=None):
+    from azure_assessment.analysis import architecture
+    from azure_assessment.models import Inventory
+    return architecture.analyse(assess(Inventory(resources), cfg))
+
+
+def _vnet(name, sub="s1", peers=(), subnets=(), loc="eastus"):
+    vid = f"/subscriptions/{sub}/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/{name}"
+    return to_resource({"id": vid, "name": name, "type": "Microsoft.Network/virtualNetworks", "location": loc,
+                        "properties": {
+                            "subnets": [{"name": s} for s in subnets],
+                            "virtualNetworkPeerings": [{"properties": {"remoteVirtualNetwork": {
+                                "id": f"/subscriptions/{sub}/resourceGroups/rg/providers/Microsoft.Network/"
+                                      f"virtualNetworks/{p}"}}} for p in peers]}})
+
+
+def test_architecture_sample_topology():
+    arch = assess_arch = _arch(sample.build().resources)
+    t = arch.topology
+    assert t.pattern == "Multi-region hub-and-spoke with exceptions" and t.confidence == "High"
+    names = lambda ids: sorted(t.nodes[i].name for i in ids)  # noqa: E731
+    assert names(t.hubs) == ["vnet-hub-eastus", "vnet-hub-westeurope"]
+    assert names(t.spokes) == ["vnet-dev-eastus", "vnet-prd-eastus", "vnet-prd-westeurope"]
+    assert names(t.isolated) == ["vnet-dev-sandbox"]
+    assert {e[2] for e in t.edges} == {"hub-spoke", "hub-hub", "spoke-spoke"}
+    assert t.onprem and t.onprem[0]["type"] == "VPN"
+    hub_e = next(n for n in t.nodes.values() if n.name == "vnet-hub-eastus")
+    assert {"Azure Firewall", "Azure Bastion", "VPN gateway"} <= set(hub_e.platform_services)
+    assert not next(n for n in t.nodes.values() if n.name == "vnet-dev-eastus").default_route_to_nva
+    d = {x.key: x for x in assess_arch.dimensions}
+    assert d["hybrid"].pattern == "Site-to-site VPN to on-premises"
+    assert d["landing_zone"].pattern.startswith("Landing-zone style")
+    assert d["traffic"].pattern.startswith("Defence in depth")
+    assert any("spoke-to-spoke" in k for k in d["network"].considerations)
+    assert "network topology is multi-region hub-and-spoke" in arch.headline
+
+
+@pytest.mark.parametrize("vnets,expected", [
+    ([("a", ["b", "c"]), ("b", ["a", "c"]), ("c", ["a", "b"])], "Full mesh peering"),
+    ([("a", []), ("b", [])], "Isolated virtual networks (no peering)"),
+    ([("a", [])], "Single virtual network"),
+    ([("hub", ["s1", "s2"], ["AzureFirewallSubnet"]), ("s1", ["hub"]), ("s2", ["hub"])], "Hub-and-spoke"),
+    ([("core", ["x", "y", "z"]), ("x", ["core"]), ("y", ["core"]), ("z", ["core"])], "Hub-and-spoke"),
+    ([("a", ["b"]), ("b", ["a", "c"]), ("c", ["b"])], "Ad-hoc peering (no central hub)"),
+])
+def test_topology_patterns(vnets, expected):
+    res = [_vnet(v[0], peers=v[1], subnets=v[2] if len(v) > 2 else ()) for v in vnets]
+    assert _arch(res).topology.pattern == expected
+
+
+def test_topology_vwan_and_no_network():
+    vwan = to_resource({"name": "vwan", "type": "Microsoft.Network/virtualWans", "properties": {"x": 1}})
+    assert _arch([vwan, _vnet("a")]).topology.pattern.startswith("Azure Virtual WAN")
+    web = to_resource({"name": "app", "type": "Microsoft.Web/sites", "properties": {"httpsOnly": True}})
+    assert _arch([web]).topology.pattern.startswith("No virtual networks")
+
+
+def test_topology_without_properties(tmp_path):
+    from azure_assessment.analysis import architecture
+
+    p = tmp_path / "portal.csv"
+    p.write_text("NAME,TYPE,RESOURCE GROUP,LOCATION,SUBSCRIPTION\n"
+                 "vnet-hub,Virtual network,rg,East US,Conn\nvnet-app,Virtual network,rg,East US,Prod\n")
+    t = architecture.analyse(assess(loaders.load(p))).topology
+    assert t.pattern == "Likely hub-and-spoke (inferred from naming)" and t.confidence == "Low"
+
+
+def test_reports_include_architecture(tmp_path):
+    out = generate_reports(sample.build(), tmp_path, "Contoso")
+    html = out["html"].read_text()
+    assert 'id="architecture"' in html and "<svg class=\"topology\"" in html and "vnet-dev-sandbox" in html
+    d = docx.Document(out["docx"])
+    heads = [p.text for p in d.paragraphs if p.style.name.startswith("Heading")]
+    assert "3.1 Network topology" in heads and "3.7 Operations and monitoring" in heads
+    assert len(d.inline_shapes) >= 5  # topology diagram added to the charts
