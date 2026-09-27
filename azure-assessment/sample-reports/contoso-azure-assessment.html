@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Contoso – Azure Assessment</title>
+<title>Contoso Azure Assessment</title>
 <style>
 :root {
   --bg: #f5f7fa; --surface: #ffffff; --surface-2: #eef3f9; --ink: #0b0b0b; --ink-2: #52514e; --muted: #6b6a66;
@@ -30,7 +30,7 @@ header.hero .wrap { max-width: 1180px; margin: 0 auto; }
 header.hero .eyebrow { color: #9ec5f4; font-weight: 700; letter-spacing: .08em; font-size: 13px; }
 header.hero h1 { margin: 6px 0 4px; font-size: clamp(28px, 5vw, 44px); }
 header.hero p { margin: 0; color: #cde2fb; }
-nav.toc { position: sticky; top: 0; z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line); }
+nav.toc { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line); }
 nav.toc .wrap { max-width: 1180px; margin: 0 auto; display: flex; gap: 4px; overflow-x: auto; padding: 0 16px; align-items: center; }
 nav.toc a { color: var(--ink-2); text-decoration: none; padding: 12px 10px; white-space: nowrap; font-size: 14px; }
 nav.toc a:hover { color: var(--accent); }
@@ -85,7 +85,7 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px
 <header class="hero"><div class="wrap">
   <div class="eyebrow">AZURE ENVIRONMENT ASSESSMENT</div>
   <h1>Contoso</h1>
-  <p>Source: sample-inventory.csv · Exported 2026-09-20 · Report generated 26 September 2026 07:39</p>
+  <p>Source: sample-inventory.csv · Exported 2026-09-20 · Report generated 27 September 2026 16:02</p>
 </div></header>
 <nav class="toc"><div class="wrap">
   <a href="#summary">Summary</a><a href="#inventory">Inventory</a><a href="#scorecard">Scorecard</a>
