@@ -1,13 +1,13 @@
 # Azure Inventory Assessment
 
 Turns an Azure resource inventory **exported by the customer** (CSV or JSON) into a professional
-assessment report in three formats. The tool never connects to Azure and needs no credentials.
+assessment report in Word and HTML (PowerPoint is optional). The tool never connects to Azure and needs no credentials.
 It only reads the files you give it.
 
 | Format | Audience | Contents |
 |---|---|---|
 | **Word (.docx)** | Full written report | Cover, table of contents, executive summary, scope & methodology, data coverage, inventory charts, findings by pillar, 30/60/90-day roadmap, appendices (all findings and full inventory) |
-| **PowerPoint (.pptx)** | Executive briefing | 16:9 deck: title, agenda, KPIs, scope, data coverage, inventory, scorecard, findings, roadmap, next steps |
+| **PowerPoint (.pptx)**, optional (`-f docx,html,pptx`) | Executive briefing | 16:9 deck: title, agenda, KPIs, scope, data coverage, inventory, scorecard, findings, roadmap, next steps |
 | **HTML** | Interactive, shareable | Self-contained single file: KPIs, posture score, charts, scorecard, findings, roadmap, searchable/sortable tables, light/dark theme |
 
 A `*-findings.json` file is also written so the results can be fed into other tools.
@@ -28,14 +28,14 @@ Python 3.10+ is required.
 ## Usage
 
 ```bash
-# Build all three reports from the file(s) the customer sent
+# Build the Word and HTML reports from the file(s) the customer sent
 azure-assess report customer-inventory.csv --customer "Fabrikam" --out reports
 
 # Several files (e.g. one per subscription or per export page) are merged; duplicates are dropped
 azure-assess report inventory-001.json inventory-002.json --customer "Fabrikam"
 
 # Choose formats, apply the customer's policy, and stamp the export date
-azure-assess report inventory.json -c "Fabrikam" -f docx,pptx --config examples/config.json --inventory-date 2026-09-20
+azure-assess report inventory.json -c "Fabrikam" -f docx,html,pptx --config examples/config.json --inventory-date 2026-09-20
 
 # Try it with built-in sample data
 azure-assess demo --customer "Contoso"
@@ -120,7 +120,7 @@ Pass `--config examples/config.json` to apply the customer's policy:
 
 * The Word table of contents is a field. Word refreshes it on open (accept the prompt) or with **F9**.
 * The Word appendices show up to 500 rows; the HTML report and JSON files always hold everything.
-* `sample-reports/` contains reports generated from the built-in demo data.
+* `sample-reports/` contains Word and HTML reports built from `examples/sample-inventory.csv`, plus a PDF copy of the Word report.
 
 ## Development
 

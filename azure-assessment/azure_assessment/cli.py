@@ -18,13 +18,14 @@ from .loaders import csv_loader, json_loader, sample
 from .models import Inventory
 
 FORMATS = ("html", "docx", "pptx")
+DEFAULT_FORMATS = ("docx", "html")  # PowerPoint on request: -f docx,html,pptx
 
 
 def _load_config(path: str | None) -> dict:
     return json.loads(Path(path).read_text()) if path else {}
 
 
-def generate_reports(inventory: Inventory, out_dir: Path, customer: str, formats=FORMATS,
+def generate_reports(inventory: Inventory, out_dir: Path, customer: str, formats=DEFAULT_FORMATS,
                      config: dict | None = None) -> dict[str, Path]:
     from .reports import charts, html_report, ppt_report, word_report
 
@@ -62,7 +63,8 @@ def main(argv: list[str] | None = None) -> int:
     def report_opts(p):
         p.add_argument("-o", "--out", default="reports", help="Output directory (default: reports)")
         p.add_argument("-c", "--customer", default="Customer", help="Customer name shown on the reports")
-        p.add_argument("-f", "--formats", default=",".join(FORMATS), help="Comma list of html,docx,pptx")
+        p.add_argument("-f", "--formats", default=",".join(DEFAULT_FORMATS),
+                       help="Comma list of docx,html,pptx (default: docx,html)")
         p.add_argument("--config", help="JSON file overriding assessment settings (see examples/config.json)")
         p.add_argument("--inventory-date", help="Date the customer exported the inventory (shown on the reports)")
 

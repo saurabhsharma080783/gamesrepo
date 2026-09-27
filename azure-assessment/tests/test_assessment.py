@@ -5,7 +5,7 @@ import pptx
 import pytest
 
 from azure_assessment.analysis.assessor import assess
-from azure_assessment.cli import generate_reports, main
+from azure_assessment.cli import FORMATS, generate_reports, main
 from azure_assessment import loaders
 from azure_assessment.loaders import csv_loader, json_loader, sample
 from azure_assessment.loaders.normalize import to_resource
@@ -83,7 +83,7 @@ def test_roundtrip_export(tmp_path):
 
 
 def test_generate_all_reports(tmp_path):
-    out = generate_reports(sample.build(), tmp_path, "Contoso Ltd")
+    out = generate_reports(sample.build(), tmp_path, "Contoso Ltd", FORMATS)
     assert set(out) == {"html", "docx", "pptx", "findings"}
 
     html = out["html"].read_text()
@@ -199,7 +199,7 @@ def test_cli_report_and_template(tmp_path, capsys):
 def test_reports_render_with_coverage_gaps(tmp_path):
     p = tmp_path / "portal.csv"
     p.write_text("NAME,TYPE,RESOURCE GROUP,LOCATION,SUBSCRIPTION\nvm1,Virtual machine,rg,East US,Prod\n")
-    out = generate_reports(loaders.load(p), tmp_path / "out", "Tailspin")
+    out = generate_reports(loaders.load(p), tmp_path / "out", "Tailspin", FORMATS)
     assert "Data coverage" in out["html"].read_text()
     d = docx.Document(out["docx"])
     assert any(p.text == "Data coverage and limitations" for p in d.paragraphs)
@@ -207,3 +207,8 @@ def test_reports_render_with_coverage_gaps(tmp_path):
               if sh.has_text_frame]
     assert "Data coverage & limitations" in titles
 
+
+
+def test_default_formats_are_word_and_html(tmp_path):
+    assert main(["demo", "-o", str(tmp_path)]) == 0
+    assert sorted(p.suffix for p in tmp_path.iterdir()) == [".docx", ".html", ".json"]
