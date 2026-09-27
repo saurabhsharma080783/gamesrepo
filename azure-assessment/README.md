@@ -51,7 +51,7 @@ Python 3.10+ is required.
 
 ```bash
 # Build the Word and HTML reports from the file(s) the customer sent
-azure-assess report customer-inventory.csv --customer "Fabrikam" --out reports
+azure-assess report customer-inventory.csv --customer "Fabrikam"
 
 # Several files (e.g. one per subscription or per export page) are merged; duplicates are dropped
 azure-assess report inventory-001.json inventory-002.json --customer "Fabrikam"
@@ -142,7 +142,10 @@ Pass `--config examples/config.json` to apply the customer's policy:
 
 * The Word table of contents is a field. Word refreshes it on open (accept the prompt) or with **F9**.
 * The Word appendices show up to 500 rows; the HTML report and JSON files always hold everything.
-* `sample-reports/` contains Word and HTML reports built from `examples/sample-inventory.csv`, plus a PDF copy of the Word report.
+* Reports are written to `reports/` in this folder (whichever folder you run the command from) and are meant to be
+  committed, so the latest report is kept in the repository. Use `--out <folder>` to write somewhere else.
+  Files are named after the customer, so reports from a previous customer stay until you delete them.
+* `reports/` currently holds the Contoso sample built from `examples/sample-inventory.csv`, plus a PDF copy of the Word report.
 
 ## Development
 

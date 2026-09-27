@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ a.customer }} Azure Assessment</title>
+<style>
+:root {
+  --bg: #f5f7fa; --surface: #ffffff; --surface-2: #eef3f9; --ink: #0b0b0b; --ink-2: #52514e; --muted: #6b6a66;
+  --line: #e1e0d9; --primary: #0f3b68; --accent: #2a78d6; --bar: #2a78d6;
+  --high: #d03b3b; --medium: #c9622f; --low: #9a6700; --good: #0a7f0a;
+  --d-hub-fill: #e3ecf7; --d-hub-stroke: #0f3b68; --d-bad-fill: #fdf1f1;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d0d0d; --surface: #1a1a19; --surface-2: #232322; --ink: #ffffff; --ink-2: #c3c2b7; --muted: #9a998f;
+    --line: #2c2c2a; --primary: #9ec5f4; --accent: #3987e5; --bar: #3987e5;
+    --high: #e66767; --medium: #ec835a; --low: #fab219; --good: #0ca30c; --d-hub-fill: #16283d; --d-hub-stroke: #9ec5f4; --d-bad-fill: #2a1a1a; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d0d0d; --surface: #1a1a19; --surface-2: #232322; --ink: #ffffff; --ink-2: #c3c2b7; --muted: #9a998f;
+  --line: #2c2c2a; --primary: #9ec5f4; --accent: #3987e5; --bar: #3987e5;
+  --high: #e66767; --medium: #ec835a; --low: #fab219; --good: #0ca30c; --d-hub-fill: #16283d; --d-hub-stroke: #9ec5f4; --d-bad-fill: #2a1a1a; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+header.hero { background: #0f3b68; color: #fff; padding: 48px 24px 40px; }
+header.hero .wrap { max-width: 1180px; margin: 0 auto; }
+header.hero .eyebrow { color: #9ec5f4; font-weight: 700; letter-spacing: .08em; font-size: 13px; }
+header.hero h1 { margin: 6px 0 4px; font-size: clamp(28px, 5vw, 44px); }
+header.hero p { margin: 0; color: #cde2fb; }
+nav.toc { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line); }
+nav.toc .wrap { max-width: 1180px; margin: 0 auto; display: flex; gap: 4px; overflow-x: auto; padding: 0 16px; align-items: center; }
+nav.toc a { color: var(--ink-2); text-decoration: none; padding: 12px 10px; white-space: nowrap; font-size: 14px; }
+nav.toc a:hover { color: var(--accent); }
+nav.toc button { margin-left: auto; background: none; border: 1px solid var(--line); color: var(--ink-2); border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+main { max-width: 1180px; margin: 0 auto; padding: 24px 16px 64px; }
+section { margin-top: 36px; }
+h2 { color: var(--primary); font-size: 24px; margin: 0 0 12px; }
+h3 { font-size: 17px; margin: 20px 0 8px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 20px; }
+.grid { display: grid; gap: 16px; }
+.kpis { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.kpi { text-align: center; padding: 18px 12px; }
+.kpi .v { font-size: 30px; font-weight: 700; color: var(--primary); }
+.kpi .l { color: var(--ink-2); font-size: 13px; }
+.two { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+.bars { list-style: none; margin: 0; padding: 0; }
+.bars li { display: grid; grid-template-columns: minmax(110px, 38%) 1fr 48px; gap: 10px; align-items: center; padding: 4px 0; font-size: 14px; }
+.bars .lbl { color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bars .track { height: 14px; }
+.bars .fill { height: 100%; background: var(--bar); border-radius: 0 4px 4px 0; min-width: 2px; }
+.bars .val { text-align: right; font-variant-numeric: tabular-nums; }
+.bars li:hover .fill { filter: brightness(1.15); }
+.score { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+.ring { --p: 50; --c: var(--accent); width: 120px; height: 120px; border-radius: 50%; display: grid; place-items: center;
+  background: conic-gradient(var(--c) calc(var(--p) * 1%), var(--surface-2) 0); }
+.ring span { width: 92px; height: 92px; border-radius: 50%; background: var(--surface); display: grid; place-items: center; font-size: 28px; font-weight: 700; }
+ul.obs li { margin-bottom: 6px; }
+.pill { display: inline-block; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; border: 1px solid currentColor; }
+.sev-High, .kpi .v.sev-High { color: var(--high); } .sev-Medium { color: var(--medium); } .sev-Low { color: var(--low); }
+.r-Good { color: var(--good); } .r-Fair { color: var(--low); } .r-Poor { color: var(--high); } .r-Not-assessed { color: var(--muted); }
+.notice { border-left: 4px solid var(--accent); }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { background: var(--surface-2); color: var(--ink-2); font-weight: 600; position: sticky; top: 0; cursor: pointer; user-select: none; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+tbody tr:hover { background: var(--surface-2); }
+.filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.filters input, .filters select { background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 7px 10px; font: inherit; font-size: 14px; }
+.filters input { flex: 1 1 220px; }
+.rule { border-left: 4px solid var(--line); padding: 10px 14px; margin: 10px 0; background: var(--surface); border-radius: 0 8px 8px 0; }
+.rule.High { border-left-color: var(--high); } .rule.Medium { border-left-color: var(--medium); } .rule.Low { border-left-color: var(--low); }
+.rule .meta { color: var(--ink-2); font-size: 13px; }
+.phases { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.phase h3 { margin-top: 0; }
+.muted { color: var(--muted); }
+.lede { color: var(--ink-2); max-width: 75ch; margin: 0 0 12px; }
+.env-toc { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 0 0 16px; font-size: 14px; }
+.env-toc a, .rule a { color: var(--accent); }
+article.env { margin-bottom: 16px; scroll-margin-top: 56px; }
+article.env h3 { margin-top: 0; color: var(--primary); }
+article.env p { max-width: 80ch; }
+.env-list { padding-left: 20px; max-width: 80ch; } .env-list li { margin-bottom: 6px; }
+.env-table { margin: 12px 0; }
+caption { text-align: left; font-weight: 600; color: var(--ink-2); padding: 0 0 6px; }
+.related { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+.related-label { font-weight: 600; color: var(--ink-2); font-size: 13px; margin-right: 4px; }
+.related a.pill { text-decoration: none; font-weight: 600; }
+.rule { scroll-margin-top: 56px; }
+article.arch h4 { font-size: 14px; margin: 16px 0 6px; color: var(--ink-2); }
+.pattern { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 16px; }
+.pattern strong { color: var(--accent); }
+.pattern-label { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; }
+.conf-High { color: var(--good); } .conf-Medium { color: var(--low); } .conf-Low { color: var(--high); }
+table.glance a { color: var(--accent); text-decoration: none; }
+.considerations li::marker { color: var(--accent); }
+figure.topology-wrap { margin: 16px 0; }
+figure.topology-wrap figcaption { color: var(--muted); font-size: 13px; margin-top: 6px; }
+svg.topology { width: 100%; max-width: 880px; min-width: 640px; height: auto; display: block; margin: 0 auto; background: var(--surface); }
+svg.topology .node rect { stroke-width: 1.4; }
+svg.topology .node-hub rect { fill: var(--d-hub-fill); stroke: var(--d-hub-stroke); stroke-width: 2; }
+svg.topology .node-spoke rect { fill: var(--surface); stroke: var(--accent); }
+svg.topology .node-other rect { fill: var(--surface); stroke: var(--muted); }
+svg.topology .node-isolated rect { fill: var(--d-bad-fill); stroke: var(--high); stroke-dasharray: 5 4; }
+svg.topology .node-onprem rect { fill: var(--surface-2); stroke: var(--ink-2); }
+svg.topology text { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+svg.topology .t-title { font-size: 13px; font-weight: 700; fill: var(--ink); }
+svg.topology .t-sub { font-size: 11px; fill: var(--ink-2); }
+svg.topology .t-svc { font-size: 10.5px; fill: var(--d-hub-stroke); font-weight: 600; }
+svg.topology .t-note { font-size: 10.5px; } svg.topology .t-note.ok { fill: var(--good); } svg.topology .t-note.warn { fill: var(--medium); }
+svg.topology .t-group { font-size: 12px; font-weight: 700; fill: var(--ink-2); }
+svg.topology .edge { stroke-width: 2; fill: none; }
+svg.topology .edge-hub-spoke, svg.topology .edge-other { stroke: var(--muted); }
+svg.topology .edge-hub-hub { stroke: var(--d-hub-stroke); stroke-dasharray: 8 5; }
+svg.topology .edge-spoke-spoke { stroke: var(--high); stroke-dasharray: 6 4; }
+svg.topology .edge-onprem { stroke: var(--ink-2); stroke-dasharray: 2 4; }
+svg.topology .edge-label { font-size: 11px; fill: var(--ink-2); } svg.topology .edge-label.bad { fill: var(--high); }
+footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px; }
+@media print { nav.toc, .filters { display: none; } body { background: #fff; } .card { break-inside: avoid; } }
+</style>
+</head>
+<body>
+<header class="hero"><div class="wrap">
+  <div class="eyebrow">AZURE ENVIRONMENT ASSESSMENT</div>
+  <h1>{{ a.customer }}</h1>
+  <p>{% if a.inventory.source %}Source: {{ a.inventory.source }} · {% endif %}{% if a.inventory.collected_at %}Exported {{ a.inventory.collected_at }} · {% endif %}Report generated {{ generated }}</p>
+</div></header>
+<nav class="toc"><div class="wrap">
+  <a href="#summary">Summary</a>{% if a.coverage_gaps %}<a href="#coverage">Data coverage</a>{% endif %}<a href="#architecture">Architecture</a><a href="#environment">Infrastructure</a><a href="#inventory">Inventory</a><a href="#scorecard">Scorecard</a>
+  <a href="#findings">Findings</a><a href="#roadmap">Roadmap</a><a href="#details">Detailed findings</a>
+  <a href="#resources">Resources</a>
+  <button type="button" id="theme" aria-label="Toggle colour theme">Theme</button>
+</div></nav>
+<main>
+<section id="summary">
+  <h2>Executive summary</h2>
+  {% set sev = a.severity_counts %}
+  <div class="grid kpis">
+    <div class="card kpi"><div class="v">{{ "{:,}".format(a.total_resources) }}</div><div class="l">Resources</div></div>
+    <div class="card kpi"><div class="v">{{ a.inventory.subscriptions|length }}</div><div class="l">Subscriptions</div></div>
+    <div class="card kpi"><div class="v">{{ a.resource_group_count }}</div><div class="l">Resource groups</div></div>
+    <div class="card kpi"><div class="v">{{ a.by_location()|length }}</div><div class="l">Regions</div></div>
+    <div class="card kpi"><div class="v sev-High">{{ sev.High }}</div><div class="l">High findings</div></div>
+    <div class="card kpi"><div class="v">{{ a.tag_coverage_label }}</div><div class="l">Tag coverage</div></div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <div class="score">
+      <div class="ring" style="--p: {{ a.overall_score or 0 }}; --c: {{ a.overall_score|rating_color }}"><span>{{ a.overall_score_label }}</span></div>
+      <div>
+        <div class="muted">Overall posture score</div>
+        <div style="font-size:22px;font-weight:700" class="r-{{ a.overall_rating|replace(' ', '-') }}">{{ a.overall_rating }}</div>
+        {% if a.score_basis %}<div class="muted"><strong>{{ a.score_basis }}</strong> (see data coverage)</div>{% endif %}
+        <div class="muted">{{ a.findings|length }} findings · {{ sev.High }} high · {{ sev.Medium }} medium · {{ sev.Low }} low</div>
+      </div>
+    </div>
+    <h3>Key observations</h3>
+    {% set obs = a.key_observations() %}
+    <ul class="obs">{% for o in obs[:1] + [arch.headline] + obs[1:] %}<li>{{ o }}</li>{% endfor %}</ul>
+  </div>
+</section>
+
+{% if a.coverage_gaps %}
+<section id="coverage">
+  <h2>Data coverage &amp; limitations</h2>
+  <div class="card notice">
+    <p style="margin-top:0">{{ a.coverage_gaps|length }} check(s) lacked the data they need in the inventory export{% if a.missing_fields %} (missing: {{ a.missing_fields|join(", ") }}){% endif %}. They are excluded from the scores rather than treated as passed. For a complete assessment, share a Resource Graph export with the <code>tags</code>, <code>sku</code>, <code>zones</code> and <code>properties</code> columns.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Rule</th><th>Check</th><th>Pillar</th><th>Data needed</th><th class="num">Not assessed</th></tr></thead>
+      <tbody>{% for g in a.coverage_gaps %}<tr><td>{{ g.rule.id }}</td><td>{{ g.rule.title }}</td><td>{{ g.rule.pillar }}</td><td>{{ g.missing }}</td><td class="num">{{ g.skipped }} of {{ g.applicable }}</td></tr>{% endfor %}</tbody>
+    </table></div>
+  </div>
+</section>
+{% endif %}
+
+<section id="architecture">
+  <h2>Architecture assessment</h2>
+  <p class="lede">The architecture patterns the environment follows, compared with Microsoft's reference architectures (Cloud Adoption Framework Azure landing zone and Well-Architected Framework). Confidence shows how firmly the inventory supports each conclusion: High means direct configuration evidence, Medium means inferred from resource types and naming, Low means the export lacked the data. Identity, role assignments, Azure Policy and management groups are not part of a resource inventory and are out of scope.</p>
+  <div class="card table-wrap" style="padding:0">
+    <table class="glance">
+      <thead><tr><th>Area</th><th>Pattern identified</th><th>Confidence</th></tr></thead>
+      <tbody>{% for d in arch.dimensions %}
+        <tr><td><a href="#arch-{{ d.key }}">{{ loop.index }}. {{ d.title }}</a></td><td><strong>{{ d.pattern }}</strong></td><td><span class="pill conf-{{ d.confidence }}">{{ d.confidence }}</span></td></tr>
+      {% endfor %}</tbody>
+    </table>
+  </div>
+  {% for d in arch.dimensions %}
+  <article class="card env arch" id="arch-{{ d.key }}">
+    <h3>{{ loop.index }}. {{ d.title }}</h3>
+    <p class="pattern"><span class="pattern-label">Pattern identified</span> <strong>{{ d.pattern }}</strong> <span class="pill conf-{{ d.confidence }}">{{ d.confidence }} confidence</span></p>
+    {% for para in d.summary %}<p>{{ para }}</p>{% endfor %}
+    {% if d.key == "network" and topology_svg %}
+    <figure class="topology-wrap">
+      <div class="table-wrap">{{ topology_svg|safe }}</div>
+      <figcaption>Network topology derived from VNet peerings ({{ arch.topology.pattern }}). Hover a network for details.</figcaption>
+    </figure>
+    {% endif %}
+    {% if d.evidence %}<h4>Evidence from the inventory</h4><ul class="env-list">{% for e in d.evidence %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+    {% for caption, headers, rows, widths in d.tables %}
+    <div class="table-wrap env-table">
+      <table>
+        <caption>{{ caption }}</caption>
+        <thead><tr>{% for h in headers %}<th{% if rows and rows[0][loop.index0] is number %} class="num"{% endif %}>{{ h }}</th>{% endfor %}</tr></thead>
+        <tbody>{% for row in rows %}<tr>{% for v in row %}<td{% if v is number %} class="num"{% endif %}>{{ v }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+      </table>
+    </div>
+    {% endfor %}
+    {% if d.considerations %}<h4>Considerations against the reference architecture</h4><ul class="env-list considerations">{% for k in d.considerations %}<li>{{ k }}</li>{% endfor %}</ul>{% endif %}
+    {% if d.related %}
+    <div class="related"><span class="related-label">Related findings</span>
+      {% for r in d.related %}<a class="pill sev-{{ r.rule.severity }}" href="#rule-{{ r.rule.id }}">{{ r.rule.id }} · {{ r.rule.title }} ({{ r.affected }})</a>{% endfor %}
+    </div>
+    {% endif %}
+  </article>
+  {% endfor %}
+</section>
+
+<section id="environment">
+  <h2>Infrastructure overview</h2>
+  <p class="lede">What the environment contains, how it is organised and how each area is configured, as understood from the inventory export. Each part links to the related findings so it can be read alongside them.</p>
+  <nav class="env-toc" aria-label="Infrastructure overview contents">
+    {% for ns in sections %}<a href="#env-{{ ns.key }}">{{ loop.index }}. {{ ns.title }}</a>{% endfor %}
+  </nav>
+  {% for ns in sections %}
+  <article class="card env" id="env-{{ ns.key }}">
+    <h3>{{ loop.index }}. {{ ns.title }}</h3>
+    {% for para in ns.paragraphs %}<p>{{ para }}</p>{% endfor %}
+    {% if ns.bullets %}<ul class="env-list">{% for b in ns.bullets %}{% set name, rest = b.split(": ", 1) %}<li><strong>{{ name }}:</strong> {{ rest }}</li>{% endfor %}</ul>{% endif %}
+    {% for caption, t in ns.tables %}
+    <div class="table-wrap env-table">
+      <table>
+        <caption>{{ caption }}</caption>
+        <thead><tr>{% for h in t.headers %}<th{% if t.rows and t.rows[0][loop.index0] is number %} class="num"{% endif %}>{{ h }}</th>{% endfor %}</tr></thead>
+        <tbody>{% for row in t.rows %}<tr>{% for v in row %}<td{% if v is number %} class="num"{% endif %}>{{ v }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+      </table>
+    </div>
+    {% endfor %}
+    {% if ns.related %}
+    <div class="related"><span class="related-label">Related findings</span>
+      {% for r in ns.related %}<a class="pill sev-{{ r.rule.severity }}" href="#rule-{{ r.rule.id }}">{{ r.rule.id }} · {{ r.rule.title }} ({{ r.affected }})</a>{% endfor %}
+    </div>
+    {% endif %}
+  </article>
+  {% endfor %}
+</section>
+
+<section id="inventory">
+  <h2>Inventory overview</h2>
+  <div class="grid two">
+    {% for title, data in [("Top resource types", by_type), ("Resources by region", by_region), ("Resources by subscription", by_sub)] %}
+    <div class="card"><h3 style="margin-top:0">{{ title }}</h3>
+      <ul class="bars">{% for b in data %}
+        <li title="{{ b.label }}: {{ b.value }}"><span class="lbl">{{ b.label }}</span><span class="track"><span class="fill" style="display:block;width:{{ b.pct }}%"></span></span><span class="val">{{ b.value }}</span></li>
+      {% endfor %}</ul>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section id="scorecard">
+  <h2>Scorecard</h2>
+  <div class="card table-wrap">
+    <table>
+      <thead><tr><th>Pillar</th><th class="num">Score</th><th>Rating</th><th class="num">Checks</th><th class="num">High</th><th class="num">Medium</th><th class="num">Low</th></tr></thead>
+      <tbody>{% for p in a.pillar_scores %}
+        <tr><td>{{ p.pillar }}</td><td class="num"><strong>{{ p.score_label }}</strong></td>
+          <td><span class="pill r-{{ p.rating|replace(' ', '-') }}">{{ p.rating }}</span></td><td class="num">{{ p.checks }}</td>
+          <td class="num">{{ p.high }}</td><td class="num">{{ p.medium }}</td><td class="num">{{ p.low }}</td></tr>
+      {% endfor %}</tbody>
+    </table>
+  </div>
+</section>
+
+<section id="findings">
+  <h2>Findings by pillar</h2>
+  {% for pillar in pillars %}
+    {% set rs = a.rules_for(pillar) %}
+    <h3>{{ pillar }}</h3>
+    {% set ps = a.pillar_scores|selectattr("pillar", "equalto", pillar)|first %}
+    {% if not rs %}<p class="muted">{% if ps.score is none %}Not assessed: the inventory export lacked the data needed for this pillar.{% else %}No issues identified.{% endif %}</p>{% endif %}
+    {% for s in rs %}
+    <div class="rule {{ s.rule.severity }}" id="rule-{{ s.rule.id }}">
+      <div><strong>{{ s.rule.id }} · {{ s.rule.title }}</strong> <span class="pill sev-{{ s.rule.severity }}">{{ s.rule.severity }}</span></div>
+      <div class="meta">{{ s.affected }} of {{ s.evaluated }} evaluated resources · e.g. {{ s.examples|join(", ") }}{% if s.affected > s.examples|length %} …{% endif %}</div>
+      <div><strong>Recommendation:</strong> {{ s.rule.recommendation }}</div>
+      {% if s.rule.id in described_in %}<div class="meta">Context: <a href="#{{ described_in[s.rule.id][0] }}">{{ described_in[s.rule.id][1] }}</a> in the infrastructure overview</div>{% endif %}
+    </div>
+    {% endfor %}
+  {% endfor %}
+</section>
+
+<section id="roadmap">
+  <h2>Remediation roadmap</h2>
+  <div class="grid phases">
+    {% for phase, items in a.roadmap().items() %}
+    <div class="card phase"><h3>{{ phase }}</h3>
+      {% if items %}<ul>{% for s in items %}<li>{{ s.rule.title }} <span class="muted">({{ s.affected }})</span></li>{% endfor %}</ul>
+      {% else %}<p class="muted">No actions.</p>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section id="details">
+  <h2>Detailed findings <span class="muted" style="font-size:15px">({{ a.findings|length }})</span></h2>
+  <div class="filters" data-for="findings-table">
+    <input type="search" placeholder="Search findings…" aria-label="Search findings">
+    <select data-col="1" aria-label="Severity"><option value="">All severities</option><option>High</option><option>Medium</option><option>Low</option></select>
+    <select data-col="2" aria-label="Pillar"><option value="">All pillars</option>{% for p in pillars %}<option>{{ p }}</option>{% endfor %}</select>
+  </div>
+  <div class="card table-wrap" style="padding:0;max-height:640px;overflow:auto">
+    <table id="findings-table" class="sortable">
+      <thead><tr><th>Rule</th><th>Severity</th><th>Pillar</th><th>Resource</th><th>Type</th><th>Resource group</th><th>Subscription</th><th>Detail</th></tr></thead>
+      <tbody>{% for f in a.findings %}
+        <tr><td>{{ f.rule_id }}</td><td><span class="pill sev-{{ f.severity }}">{{ f.severity }}</span></td><td>{{ f.pillar }}</td>
+          <td title="{{ f.resource_id }}">{{ f.resource_name }}</td><td>{{ f.resource_type }}</td><td>{{ f.resource_group }}</td>
+          <td>{{ f.subscription }}</td><td>{{ f.detail }}</td></tr>
+      {% endfor %}</tbody>
+    </table>
+  </div>
+</section>
+
+<section id="resources">
+  <h2>Resource inventory <span class="muted" style="font-size:15px">({{ resources|length }})</span></h2>
+  <div class="filters" data-for="resources-table">
+    <input type="search" placeholder="Search resources…" aria-label="Search resources">
+  </div>
+  <div class="card table-wrap" style="padding:0;max-height:640px;overflow:auto">
+    <table id="resources-table" class="sortable">
+      <thead><tr><th>Name</th><th>Type</th><th>Resource group</th><th>Location</th><th>Subscription</th><th>SKU</th><th>Tags</th></tr></thead>
+      <tbody>{% for r in resources %}
+        <tr><td title="{{ r.id }}">{{ r.name }}</td><td>{{ friendly_type(r.type) }}</td><td>{{ r.resource_group }}</td><td>{{ r.location }}</td>
+          <td>{{ r.subscription_name }}</td><td>{{ r.sku.name if r.sku is mapping and r.sku.name else "" }}</td>
+          <td class="muted">{% for k, v in r.tags.items() %}{{ k }}={{ v }}{% if not loop.last %}, {% endif %}{% endfor %}</td></tr>
+      {% endfor %}</tbody>
+    </table>
+  </div>
+</section>
+</main>
+<footer>{{ a.customer }} · Azure Environment Assessment · Confidential</footer>
+<script>
+(function () {
+  // Theme toggle (remembered per viewer when storage is available)
+  var root = document.documentElement, btn = document.getElementById('theme');
+  try { var saved = localStorage.getItem('aa-theme'); if (saved) root.dataset.theme = saved; } catch (e) {}
+  btn.addEventListener('click', function () {
+    var dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+    root.dataset.theme = dark ? 'light' : 'dark';
+    try { localStorage.setItem('aa-theme', root.dataset.theme); } catch (e) {}
+  });
+  // Table filters
+  document.querySelectorAll('.filters').forEach(function (f) {
+    var table = document.getElementById(f.dataset.for), q = f.querySelector('input'), sels = f.querySelectorAll('select');
+    function apply() {
+      var term = q.value.toLowerCase();
+      table.querySelectorAll('tbody tr').forEach(function (tr) {
+        var ok = !term || tr.textContent.toLowerCase().indexOf(term) !== -1;
+        sels.forEach(function (s) { if (s.value && tr.cells[+s.dataset.col].textContent.trim() !== s.value) ok = false; });
+        tr.style.display = ok ? '' : 'none';
+      });
+    }
+    q.addEventListener('input', apply); sels.forEach(function (s) { s.addEventListener('change', apply); });
+  });
+  // Click-to-sort headers
+  document.querySelectorAll('table.sortable th').forEach(function (th, i) {
+    th.addEventListener('click', function () {
+      var tb = th.closest('table').tBodies[0], asc = th.dataset.dir !== 'asc';
+      th.parentNode.querySelectorAll('th').forEach(function (h) { delete h.dataset.dir; });
+      th.dataset.dir = asc ? 'asc' : 'desc';
+      Array.from(tb.rows).sort(function (a, b) {
+        var x = a.cells[th.cellIndex].textContent.trim(), y = b.cells[th.cellIndex].textContent.trim();
+        return (asc ? 1 : -1) * x.localeCompare(y, undefined, { numeric: true });
+      }).forEach(function (r) { tb.appendChild(r); });
+    });
+  });
+})();
+</script>
+</body>
+</html>

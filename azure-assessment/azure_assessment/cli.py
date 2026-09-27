@@ -18,11 +18,19 @@ from .loaders import csv_loader, json_loader, sample
 from .models import Inventory
 
 FORMATS = ("html", "docx", "pptx")
+# Reports are written to the project's reports/ folder, which is committed to the repository.
+_PROJECT_ROOT = Path(__file__).resolve().parents[1]
+REPORTS_DIR = _PROJECT_ROOT / "reports" if (_PROJECT_ROOT / "pyproject.toml").exists() else Path("reports")
 DEFAULT_FORMATS = ("docx", "html")  # PowerPoint on request: -f docx,html,pptx
 
 
 def _load_config(path: str | None) -> dict:
     return json.loads(Path(path).read_text()) if path else {}
+
+
+def customer_slug(customer: str) -> str:
+    slug = "".join(c if c.isalnum() else "-" for c in customer.strip().lower())
+    return "-".join(filter(None, slug.split("-"))) or "azure"
 
 
 def generate_reports(inventory: Inventory, out_dir: Path, customer: str, formats=DEFAULT_FORMATS,
@@ -31,8 +39,7 @@ def generate_reports(inventory: Inventory, out_dir: Path, customer: str, formats
 
     a = assess(inventory, config, customer)
     out_dir.mkdir(parents=True, exist_ok=True)
-    slug = "".join(c if c.isalnum() else "-" for c in customer).strip("-").lower() or "azure"
-    base = f"{slug}-azure-assessment"
+    base = f"{customer_slug(customer)}-azure-assessment"
     written: dict[str, Path] = {}
     with tempfile.TemporaryDirectory() as tmp:
         imgs = charts.render_all(a, Path(tmp)) if {"docx", "pptx"} & set(formats) else {}
@@ -61,7 +68,7 @@ def main(argv: list[str] | None = None) -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
 
     def report_opts(p):
-        p.add_argument("-o", "--out", default="reports", help="Output directory (default: reports)")
+        p.add_argument("-o", "--out", help="Output directory (default: the project's reports/ folder)")
         p.add_argument("-c", "--customer", default="Customer", help="Customer name shown on the reports")
         p.add_argument("-f", "--formats", default=",".join(DEFAULT_FORMATS),
                        help="Comma list of docx,html,pptx (default: docx,html)")
@@ -112,7 +119,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.inventory_date:
         inv.collected_at = args.inventory_date
 
-    written = generate_reports(inv, Path(args.out), args.customer, formats, _load_config(args.config))
+    out_dir = Path(args.out) if args.out else REPORTS_DIR
+    written = generate_reports(inv, out_dir, args.customer, formats, _load_config(args.config))
     for kind, path in written.items():
         print(f"  {kind:8s} {path}")
     return 0

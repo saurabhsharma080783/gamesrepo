@@ -336,3 +336,15 @@ def test_reports_include_architecture(tmp_path):
     heads = [p.text for p in d.paragraphs if p.style.name.startswith("Heading")]
     assert "3.1 Network topology" in heads and "3.7 Operations and monitoring" in heads
     assert len(d.inline_shapes) >= 5  # topology diagram added to the charts
+
+
+def test_default_output_is_project_reports_folder(tmp_path, monkeypatch):
+    from azure_assessment import cli
+
+    assert cli.REPORTS_DIR.name == "reports" and (cli.REPORTS_DIR.parent / "pyproject.toml").exists()
+    monkeypatch.setattr(cli, "REPORTS_DIR", tmp_path / "reports")
+    monkeypatch.chdir(tmp_path)
+    assert main(["demo", "-c", "Fabrikam Ltd"]) == 0
+    assert sorted(p.name for p in (tmp_path / "reports").iterdir()) == [
+        "fabrikam-ltd-azure-assessment-findings.json", "fabrikam-ltd-azure-assessment.docx",
+        "fabrikam-ltd-azure-assessment.html"]

@@ -1,4 +1,3 @@
-reports/
 inventory*.json
 inventory*.csv
 __pycache__/
