@@ -91,7 +91,7 @@ def test_generate_all_reports(tmp_path):
 
     d = docx.Document(out["docx"])
     headings = [p.text for p in d.paragraphs if p.style.name.startswith("Heading")]
-    assert "1. Executive summary" in headings and "5. Remediation roadmap" in headings
+    assert "1. Executive summary" in headings and "6. Remediation roadmap" in headings and "3. Infrastructure overview" in headings
     assert len(d.inline_shapes) >= 4  # charts embedded
 
     prs = pptx.Presentation(out["pptx"])
@@ -212,3 +212,48 @@ def test_reports_render_with_coverage_gaps(tmp_path):
 def test_default_formats_are_word_and_html(tmp_path):
     assert main(["demo", "-o", str(tmp_path)]) == 0
     assert sorted(p.suffix for p in tmp_path.iterdir()) == [".docx", ".html", ".json"]
+
+
+# ---- infrastructure overview (narrative) --------------------------------------
+
+def test_narrative_covers_estate_and_links_findings():
+    from azure_assessment.analysis import narrative
+
+    a = assess(sample.build(), {"allowed_locations": ["eastus", "westeurope", "uksouth"]}, "Contoso")
+    secs = {s.key: s for s in narrative.build(a)}
+    assert {"estate", "subscriptions", "regions", "compute", "network", "storage", "data", "web",
+            "security", "monitoring", "governance"} <= set(secs)
+    text = " ".join(p for s in secs.values() for p in s.paragraphs + s.bullets)
+    assert "133 Azure resources" in text and "hub-and-spoke" in text
+    assert "stopped but still allocated" in text and "unattached disks" in text
+    assert {r.rule.id for r in secs["compute"].related} >= {"REL-001", "COST-001", "COST-003"}
+    assert {r.rule.id for r in secs["regions"].related} == {"GOV-002"}
+    # every finding raised is referenced from some part of the overview
+    referenced = {r.rule.id for s in secs.values() for r in s.related}
+    assert {s.rule.id for s in a.rule_summaries} <= referenced
+
+
+def test_narrative_without_configuration_data(tmp_path):
+    from azure_assessment.analysis import narrative
+
+    p = tmp_path / "portal.csv"
+    p.write_text("NAME,TYPE,RESOURCE GROUP,LOCATION,SUBSCRIPTION\n"
+                 "vm1,Virtual machine,rg,East US,Prod\nd1,Disk,rg,East US,Prod\n"
+                 "st1,Storage account,rg,East US,Prod\n")
+    secs = {s.key: s for s in narrative.build(assess(loaders.load(p)))}
+    text = " ".join(p for s in secs.values() for p in s.paragraphs)
+    assert "could not be determined" in text  # says what it can't see instead of guessing
+    assert "tags, so tagging could not be reviewed" in text
+    assert "0 of" not in secs["storage"].paragraphs[0]
+
+
+def test_reports_include_infrastructure_overview(tmp_path):
+    out = generate_reports(sample.build(), tmp_path, "Contoso")
+    html = out["html"].read_text()
+    assert 'id="environment"' in html and 'href="#rule-SEC-007"' in html and 'id="rule-SEC-007"' in html
+    d = docx.Document(out["docx"])
+    heads = [p.text for p in d.paragraphs if p.style.name.startswith("Heading")]
+    i3, i4 = heads.index("3. Infrastructure overview"), heads.index("4. Inventory charts and statistics")
+    assert i4 - i3 >= 10  # one subsection per area
+    body = "\n".join(p.text for p in d.paragraphs)
+    assert "(see 5.1 Security)" in body and "Context: see 3." in body

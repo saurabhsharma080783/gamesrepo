@@ -6,9 +6,15 @@ It only reads the files you give it.
 
 | Format | Audience | Contents |
 |---|---|---|
-| **Word (.docx)** | Full written report | Cover, table of contents, executive summary, scope & methodology, data coverage, inventory charts, findings by pillar, 30/60/90-day roadmap, appendices (all findings and full inventory) |
+| **Word (.docx)** | Full written report | Cover, table of contents, executive summary, scope & methodology, data coverage, infrastructure overview, inventory charts, findings by pillar, 30/60/90-day roadmap, appendices (all findings and full inventory) |
 | **PowerPoint (.pptx)**, optional (`-f docx,html,pptx`) | Executive briefing | 16:9 deck: title, agenda, KPIs, scope, data coverage, inventory, scorecard, findings, roadmap, next steps |
-| **HTML** | Interactive, shareable | Self-contained single file: KPIs, posture score, charts, scorecard, findings, roadmap, searchable/sortable tables, light/dark theme |
+| **HTML** | Interactive, shareable | Self-contained single file: KPIs, posture score, infrastructure overview, charts, scorecard, findings, roadmap, searchable/sortable tables, light/dark theme |
+
+The **infrastructure overview** describes the environment in plain English, area by area:
+estate at a glance, subscriptions, regional footprint, compute, networking, storage, databases,
+application hosting, security services, monitoring, and governance and tagging. Each part ends with its
+related findings, and each finding links back to the part that describes the affected resources. When the
+export lacks configuration data, the text says what could not be determined instead of guessing.
 
 A `*-findings.json` file is also written so the results can be fed into other tools.
 

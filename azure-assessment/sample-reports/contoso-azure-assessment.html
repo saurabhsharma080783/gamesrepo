@@ -77,6 +77,19 @@ tbody tr:hover { background: var(--surface-2); }
 .phases { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
 .phase h3 { margin-top: 0; }
 .muted { color: var(--muted); }
+.lede { color: var(--ink-2); max-width: 75ch; margin: 0 0 12px; }
+.env-toc { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 0 0 16px; font-size: 14px; }
+.env-toc a, .rule a { color: var(--accent); }
+article.env { margin-bottom: 16px; scroll-margin-top: 56px; }
+article.env h3 { margin-top: 0; color: var(--primary); }
+article.env p { max-width: 80ch; }
+.env-list { padding-left: 20px; max-width: 80ch; } .env-list li { margin-bottom: 6px; }
+.env-table { margin: 12px 0; }
+caption { text-align: left; font-weight: 600; color: var(--ink-2); padding: 0 0 6px; }
+.related { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+.related-label { font-weight: 600; color: var(--ink-2); font-size: 13px; margin-right: 4px; }
+.related a.pill { text-decoration: none; font-weight: 600; }
+.rule { scroll-margin-top: 56px; }
 footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px; }
 @media print { nav.toc, .filters { display: none; } body { background: #fff; } .card { break-inside: avoid; } }
 </style>
@@ -85,10 +98,10 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px
 <header class="hero"><div class="wrap">
   <div class="eyebrow">AZURE ENVIRONMENT ASSESSMENT</div>
   <h1>Contoso</h1>
-  <p>Source: sample-inventory.csv · Exported 2026-09-20 · Report generated 27 September 2026 16:04</p>
+  <p>Source: sample-inventory.csv · Exported 2026-09-20 · Report generated 27 September 2026 16:14</p>
 </div></header>
 <nav class="toc"><div class="wrap">
-  <a href="#summary">Summary</a><a href="#inventory">Inventory</a><a href="#scorecard">Scorecard</a>
+  <a href="#summary">Summary</a><a href="#environment">Infrastructure</a><a href="#inventory">Inventory</a><a href="#scorecard">Scorecard</a>
   <a href="#findings">Findings</a><a href="#roadmap">Roadmap</a><a href="#details">Detailed findings</a>
   <a href="#resources">Resources</a>
   <button type="button" id="theme" aria-label="Toggle colour theme">Theme</button>
@@ -121,6 +134,195 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px
 </section>
 
 
+
+<section id="environment">
+  <h2>Infrastructure overview</h2>
+  <p class="lede">What the environment contains, how it is organised and how each area is configured, as understood from the inventory export. Each part links to the related findings so it can be read alongside them.</p>
+  <nav class="env-toc" aria-label="Infrastructure overview contents">
+    <a href="#env-estate">1. Estate at a glance</a><a href="#env-subscriptions">2. Subscriptions and resource organisation</a><a href="#env-regions">3. Regional footprint</a><a href="#env-compute">4. Compute</a><a href="#env-network">5. Networking</a><a href="#env-storage">6. Storage</a><a href="#env-data">7. Databases</a><a href="#env-web">8. Application hosting</a><a href="#env-security">9. Security services</a><a href="#env-monitoring">10. Monitoring and management</a><a href="#env-governance">11. Governance and tagging</a>
+  </nav>
+  
+  <article class="card env" id="env-estate">
+    <h3>1. Estate at a glance</h3>
+    <p>The environment described by sample-inventory.csv contains 133 Azure resources organised into 3 subscriptions and 19 resource groups, deployed across 4 regions. eastus is the primary region, hosting 45% of all resources, followed by westeurope (29%), uksouth (20%) and centralindia (6%).</p><p>By function, the estate is made up of compute (44%), networking (29%), application hosting (9%), storage (8%), databases (6%), security services (3%), monitoring and management (2%) and classic (legacy) resources (1%). The most common resource types are managed disks (34), virtual machines (24), network interfaces (24), storage accounts (10) and App Services (8).</p><p>The hosting model is predominantly infrastructure-as-a-service (IaaS), built around virtual machines: there are 24 virtual machines alongside 20 managed application or database services.</p>
+    
+    
+    <div class="table-wrap env-table">
+      <table>
+        <caption>Resources by functional area</caption>
+        <thead><tr><th>Area</th><th class="num">Resources</th><th>% of estate</th><th>Main resource types</th></tr></thead>
+        <tbody><tr><td>Compute</td><td class="num">58</td><td>44%</td><td>Managed disks (34), Virtual machines (24)</td></tr><tr><td>Networking</td><td class="num">38</td><td>29%</td><td>Network interfaces (24), Public IP addresses (6), Network security groups (4)</td></tr><tr><td>Application hosting</td><td class="num">12</td><td>9%</td><td>App Services (8), App Service plans (4)</td></tr><tr><td>Storage</td><td class="num">10</td><td>8%</td><td>Storage accounts (10)</td></tr><tr><td>Databases</td><td class="num">8</td><td>6%</td><td>SQL databases (6), SQL servers (2)</td></tr><tr><td>Security services</td><td class="num">4</td><td>3%</td><td>Key vaults (4)</td></tr><tr><td>Monitoring and management</td><td class="num">2</td><td>2%</td><td>Log Analytics workspaces (2)</td></tr><tr><td>Classic (legacy) resources</td><td class="num">1</td><td>1%</td><td>Classic cloud services (1)</td></tr></tbody>
+      </table>
+    </div>
+    
+    
+  </article>
+  
+  <article class="card env" id="env-subscriptions">
+    <h3>2. Subscriptions and resource organisation</h3>
+    <p>Resources are spread across 3 subscriptions. The breakdown below describes what each subscription contains, which helps show how workloads and environments are separated.</p><p>On average a resource group holds 7.0 resources. The largest are rg-prd-app01 in Contoso-Production (18), rg-dev-app01 in Contoso-NonProduction (13) and rg-prd-app02 in Contoso-Production (12).</p>
+    <ul class="env-list"><li><strong>Contoso-Production:</strong> 66 resources in 8 resource groups across 4 regions (centralindia, eastus, uksouth and westeurope). It mainly contains managed disks (20), virtual machines (14) and network interfaces (14). Resources are tagged as environment &#39;prod&#39;.</li><li><strong>Contoso-NonProduction:</strong> 52 resources in 8 resource groups across 4 regions (centralindia, eastus, uksouth and westeurope). It mainly contains managed disks (14), virtual machines (10) and network interfaces (10). Resources are tagged as environment &#39;dev&#39;.</li><li><strong>Contoso-Connectivity:</strong> 15 resources in 3 resource groups across 2 regions (eastus and westeurope). It mainly contains public IP addresses (6), network security groups (4) and virtual networks (2). Resources are tagged as environment &#39;shared&#39;.</li></ul>
+    
+    <div class="table-wrap env-table">
+      <table>
+        <caption>Subscription summary</caption>
+        <thead><tr><th>Subscription</th><th class="num">Resources</th><th class="num">Resource groups</th><th>Regions</th><th>Main resource types</th></tr></thead>
+        <tbody><tr><td>Contoso-Production</td><td class="num">66</td><td class="num">8</td><td>centralindia, eastus, uksouth, westeurope</td><td>Managed disks (20), Virtual machines (14), Network interfaces (14)</td></tr><tr><td>Contoso-NonProduction</td><td class="num">52</td><td class="num">8</td><td>centralindia, eastus, uksouth, westeurope</td><td>Managed disks (14), Virtual machines (10), Network interfaces (10)</td></tr><tr><td>Contoso-Connectivity</td><td class="num">15</td><td class="num">3</td><td>eastus, westeurope</td><td>Public IP addresses (6), Network security groups (4), Virtual networks (2)</td></tr></tbody>
+      </table>
+    </div>
+    
+    
+  </article>
+  
+  <article class="card env" id="env-regions">
+    <h3>3. Regional footprint</h3>
+    <p>Resources are deployed in 4 regions: eastus (60), westeurope (39), uksouth (26) and centralindia (8). Running in several regions gives the option of regional resilience, but only if workloads are actually designed to fail over between them.</p><p>The approved regions are eastus, westeurope and uksouth. 8 resources sit outside them, in centralindia (8).</p>
+    
+    
+    <div class="table-wrap env-table">
+      <table>
+        <caption>Resources by region</caption>
+        <thead><tr><th>Region</th><th class="num">Resources</th><th>% of estate</th><th>Main areas</th></tr></thead>
+        <tbody><tr><td>eastus</td><td class="num">60</td><td>45%</td><td>Compute (25), Networking (18), Application hosting (7)</td></tr><tr><td>westeurope</td><td class="num">39</td><td>29%</td><td>Compute (14), Networking (12), Storage (5)</td></tr><tr><td>uksouth</td><td class="num">26</td><td>20%</td><td>Compute (15), Networking (7), Databases (2)</td></tr><tr><td>centralindia</td><td class="num">8</td><td>6%</td><td>Compute (4), Storage (2), Networking (1)</td></tr></tbody>
+      </table>
+    </div>
+    
+    
+    <div class="related"><span class="related-label">Related findings</span>
+      <a class="pill sev-Medium" href="#rule-GOV-002">GOV-002 · Resource outside approved regions (8)</a>
+    </div>
+    
+  </article>
+  
+  <article class="card env" id="env-compute">
+    <h3>4. Compute</h3>
+    <p>There are 24 virtual machines across 2 subscriptions and 4 regions.</p><p>By operating system, the fleet is Linux (20) and Windows (4). It uses 6 VM sizes, mostly D-series v5 (13), E-series v5 (4) and A-series v2 (3); the most common sizes are Standard_D2s_v5 (9), Standard_E8s_v5 (4) and Standard_D4s_v5 (4).</p><p>At the time of export 19 of 24 VMs (79%) were running, 1 was deallocated and 4 were stopped but still allocated, which means their compute is still being billed.</p><p>For resilience, 9 VMs are pinned to availability zones and 0 sit in availability sets; the remaining 15 have no zone or availability-set protection and depend on a single host or datacenter.</p><p>Storage for these machines is provided by 34 managed disks totalling 4,928 GB, on Premium_LRS (31) and StandardSSD_LRS (3) tiers. Disk states are Attached (24) and Unattached (10). The 10 unattached disks (1,856 GB) are not used by any VM but are still billed.</p>
+    
+    
+    <div class="table-wrap env-table">
+      <table>
+        <caption>Virtual machines by size</caption>
+        <thead><tr><th>VM size</th><th>Series</th><th class="num">Count</th></tr></thead>
+        <tbody><tr><td>Standard_D2s_v5</td><td>D-series v5</td><td class="num">9</td></tr><tr><td>Standard_E8s_v5</td><td>E-series v5</td><td class="num">4</td></tr><tr><td>Standard_D4s_v5</td><td>D-series v5</td><td class="num">4</td></tr><tr><td>Standard_A2_v2</td><td>A-series v2</td><td class="num">3</td></tr><tr><td>Standard_DS2_v2</td><td>DS-series v2</td><td class="num">2</td></tr><tr><td>Standard_B2ms</td><td>B-series</td><td class="num">2</td></tr></tbody>
+      </table>
+    </div>
+    
+    
+    <div class="related"><span class="related-label">Related findings</span>
+      <a class="pill sev-Medium" href="#rule-REL-001">REL-001 · VM has no zone or availability set (15)</a><a class="pill sev-High" href="#rule-COST-003">COST-003 · VM stopped but not deallocated (4)</a><a class="pill sev-Low" href="#rule-COST-004">COST-004 · Deallocated VM (1)</a><a class="pill sev-Medium" href="#rule-COST-001">COST-001 · Unattached managed disk (10)</a><a class="pill sev-Low" href="#rule-OPS-001">OPS-001 · Previous-generation VM size (5)</a>
+    </div>
+    
+  </article>
+  
+  <article class="card env" id="env-network">
+    <h3>5. Networking</h3>
+    <p>The network layer consists of 38 resources: Network interfaces (24), Public IP addresses (6), Network security groups (4), Virtual networks (2) and Azure Firewalls (2).</p><p>There are 2 virtual networks in eastus and westeurope. The naming (vnet-hub-eastus and vnet-hub-westeurope) and the Azure Firewall deployment (afw-hub-eastus and afw-hub-westeurope) indicate a hub-and-spoke design, where shared connectivity and traffic inspection are centralised in a hub network.</p><p>Traffic filtering uses 4 network security groups with 6 custom rules between them. Some NSGs allow RDP or SSH from the Internet (see related findings).</p><p>6 public IP addresses are allocated; 2 of them are not associated with any resource.</p>
+    
+    
+    <div class="table-wrap env-table">
+      <table>
+        <caption>Network resources</caption>
+        <thead><tr><th>Resource type</th><th class="num">Count</th><th>Regions</th></tr></thead>
+        <tbody><tr><td>Network interfaces</td><td class="num">24</td><td>centralindia, eastus, uksouth, westeurope</td></tr><tr><td>Public IP addresses</td><td class="num">6</td><td>eastus, westeurope</td></tr><tr><td>Network security groups</td><td class="num">4</td><td>eastus, westeurope</td></tr><tr><td>Virtual networks</td><td class="num">2</td><td>eastus, westeurope</td></tr><tr><td>Azure Firewalls</td><td class="num">2</td><td>eastus, westeurope</td></tr></tbody>
+      </table>
+    </div>
+    
+    
+    <div class="related"><span class="related-label">Related findings</span>
+      <a class="pill sev-High" href="#rule-SEC-007">SEC-007 · NSG exposes management ports to the Internet (2)</a><a class="pill sev-Low" href="#rule-COST-002">COST-002 · Unassociated public IP address (2)</a>
+    </div>
+    
+  </article>
+  
+  <article class="card env" id="env-storage">
+    <h3>6. Storage</h3>
+    <p>There are 10 storage accounts, all of kind StorageV2. Replication is GRS for 4, LRS for 3 and ZRS for 3. LRS keeps copies within one datacenter only; ZRS spreads them across zones and GRS/GZRS add a copy in a paired region.</p><p>On security settings, 6 of 10 accounts require HTTPS, 8 enforce TLS 1.2 or later, 4 allow anonymous blob access, and 10 accept traffic from public networks.</p>
+    
+    
+    <div class="table-wrap env-table">
+      <table>
+        <caption>Storage accounts</caption>
+        <thead><tr><th>Account</th><th>Subscription</th><th>Replication</th><th>HTTPS only</th><th>Min TLS</th><th>Anonymous blob access</th></tr></thead>
+        <tbody><tr><td>stdevdata00</td><td>Contoso-NonProduction</td><td>Standard_GRS</td><td>Yes</td><td>TLS1_2</td><td>Allowed</td></tr><tr><td>stdevdata01</td><td>Contoso-NonProduction</td><td>Standard_GRS</td><td>No</td><td>TLS1_2</td><td>Allowed</td></tr><tr><td>stdevdata02</td><td>Contoso-NonProduction</td><td>Standard_LRS</td><td>Yes</td><td>TLS1_0</td><td>Blocked</td></tr><tr><td>stdevdata03</td><td>Contoso-NonProduction</td><td>Standard_ZRS</td><td>No</td><td>TLS1_2</td><td>Blocked</td></tr><tr><td>stdevdata04</td><td>Contoso-NonProduction</td><td>Standard_GRS</td><td>Yes</td><td>TLS1_0</td><td>Blocked</td></tr><tr><td>stprddata00</td><td>Contoso-Production</td><td>Standard_LRS</td><td>Yes</td><td>TLS1_2</td><td>Blocked</td></tr><tr><td>stprddata01</td><td>Contoso-Production</td><td>Standard_GRS</td><td>Yes</td><td>TLS1_2</td><td>Blocked</td></tr><tr><td>stprddata02</td><td>Contoso-Production</td><td>Standard_ZRS</td><td>Yes</td><td>TLS1_2</td><td>Allowed</td></tr><tr><td>stprddata03</td><td>Contoso-Production</td><td>Standard_ZRS</td><td>No</td><td>TLS1_2</td><td>Blocked</td></tr><tr><td>stprddata04</td><td>Contoso-Production</td><td>Standard_LRS</td><td>No</td><td>TLS1_2</td><td>Allowed</td></tr></tbody>
+      </table>
+    </div>
+    
+    
+    <div class="related"><span class="related-label">Related findings</span>
+      <a class="pill sev-High" href="#rule-SEC-001">SEC-001 · Storage account permits HTTP (4)</a><a class="pill sev-High" href="#rule-SEC-002">SEC-002 · Storage account allows anonymous blob access (4)</a><a class="pill sev-Medium" href="#rule-SEC-003">SEC-003 · Storage account accepts TLS &lt; 1.2 (2)</a><a class="pill sev-Low" href="#rule-REL-003">REL-003 · Storage account uses locally redundant replication (3)</a>
+    </div>
+    
+  </article>
+  
+  <article class="card env" id="env-data">
+    <h3>7. Databases</h3>
+    <p>Azure SQL is used with 2 logical servers hosting 6 databases on the S1 (3), Basic (2) and GP_Gen5_2 (1) service tiers.</p><p>Public network access is enabled on sql-dev-01; 1 of 6 databases is zone redundant.</p>
+    
+    
+    
+    <div class="related"><span class="related-label">Related findings</span>
+      <a class="pill sev-Medium" href="#rule-SEC-005">SEC-005 · SQL server reachable from public networks (1)</a><a class="pill sev-Low" href="#rule-REL-004">REL-004 · SQL database not zone redundant (3)</a>
+    </div>
+    
+  </article>
+  
+  <article class="card env" id="env-web">
+    <h3>8. Application hosting</h3>
+    <p>Web workloads run on Azure App Service: 8 apps hosted on 4 App Service plans (P1v3 (2), S1 (1) and B1 (1) pricing tiers).</p><p>6 of 8 apps enforce HTTPS-only access. The plan(s) asp-dev-00 and asp-dev-01 host no apps but still incur charges.</p>
+    
+    
+    
+    <div class="related"><span class="related-label">Related findings</span>
+      <a class="pill sev-High" href="#rule-SEC-006">SEC-006 · Web app does not enforce HTTPS (2)</a><a class="pill sev-Medium" href="#rule-COST-005">COST-005 · Empty App Service plan (2)</a>
+    </div>
+    
+  </article>
+  
+  <article class="card env" id="env-security">
+    <h3>9. Security services</h3>
+    <p>Secrets, keys and certificates are held in 4 Key Vaults (kv-dev-00, kv-dev-01, kv-prd-00 and kv-prd-01).</p><p>3 of 4 vaults have purge protection enabled, which prevents deleted secrets from being permanently removed during the retention period.</p><p>Network perimeter protection is provided by 2 Azure Firewalls in eastus and westeurope.</p>
+    
+    
+    
+    <div class="related"><span class="related-label">Related findings</span>
+      <a class="pill sev-Medium" href="#rule-SEC-004">SEC-004 · Key Vault purge protection disabled (1)</a>
+    </div>
+    
+  </article>
+  
+  <article class="card env" id="env-monitoring">
+    <h3>10. Monitoring and management</h3>
+    <p>Logs are collected in 2 Log Analytics workspaces (log-dev-01 and log-prd-01).</p><p>Log retention is 30 days on 2 workspaces.</p><p>No Recovery Services vault was found, so there is no evidence of Azure Backup protecting the virtual machines or databases.</p>
+    
+    
+    
+    <div class="related"><span class="related-label">Related findings</span>
+      <a class="pill sev-Low" href="#rule-OPS-002">OPS-002 · Log Analytics retention below target (2)</a>
+    </div>
+    
+  </article>
+  
+  <article class="card env" id="env-governance">
+    <h3>11. Governance and tagging</h3>
+    <p>116 of 133 resources (87%) carry at least one tag, and 74% carry all of the required tags (environment, owner and costCenter).</p><p>In total 3 distinct tag keys are in use, most often costCenter (107), environment (106) and owner (106).</p><p>1 resource still uses the classic (Azure Service Manager) deployment model (legacy-cloudservice). This model is retired, so it needs migrating to Azure Resource Manager.</p>
+    
+    
+    <div class="table-wrap env-table">
+      <table>
+        <caption>Required tag coverage</caption>
+        <thead><tr><th>Tag</th><th class="num">Resources tagged</th><th>Coverage</th><th>Most common values</th></tr></thead>
+        <tbody><tr><td>environment</td><td class="num">106</td><td>80%</td><td>prod (52), dev (42), shared (12)</td></tr><tr><td>owner</td><td class="num">106</td><td>80%</td><td>app-team (37), platform (35), data-team (34)</td></tr><tr><td>costCenter</td><td class="num">107</td><td>80%</td><td>CC300 (39), CC200 (35), CC100 (33)</td></tr></tbody>
+      </table>
+    </div>
+    
+    
+    <div class="related"><span class="related-label">Related findings</span>
+      <a class="pill sev-Medium" href="#rule-GOV-001">GOV-001 · Required tags missing (34)</a><a class="pill sev-Medium" href="#rule-GOV-002">GOV-002 · Resource outside approved regions (8)</a><a class="pill sev-High" href="#rule-GOV-003">GOV-003 · Classic (ASM) resource in use (1)</a>
+    </div>
+    
+  </article>
+  
+</section>
 
 <section id="inventory">
   <h2>Inventory overview</h2>
@@ -217,46 +419,53 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px
     
     
     
-    <div class="rule High">
+    <div class="rule High" id="rule-SEC-001">
       <div><strong>SEC-001 · Storage account permits HTTP</strong> <span class="pill sev-High">High</span></div>
       <div class="meta">4 of 10 evaluated resources · e.g. stdevdata01, stdevdata03, stprddata03, stprddata04</div>
       <div><strong>Recommendation:</strong> Enable &#39;Secure transfer required&#39; on the storage account.</div>
+      <div class="meta">Context: <a href="#env-storage">6. Storage</a> in the infrastructure overview</div>
     </div>
     
-    <div class="rule High">
+    <div class="rule High" id="rule-SEC-002">
       <div><strong>SEC-002 · Storage account allows anonymous blob access</strong> <span class="pill sev-High">High</span></div>
       <div class="meta">4 of 10 evaluated resources · e.g. stdevdata00, stdevdata01, stprddata02, stprddata04</div>
       <div><strong>Recommendation:</strong> Set allowBlobPublicAccess to false and use SAS or Entra ID for access.</div>
+      <div class="meta">Context: <a href="#env-storage">6. Storage</a> in the infrastructure overview</div>
     </div>
     
-    <div class="rule High">
+    <div class="rule High" id="rule-SEC-006">
       <div><strong>SEC-006 · Web app does not enforce HTTPS</strong> <span class="pill sev-High">High</span></div>
       <div class="meta">2 of 8 evaluated resources · e.g. app-dev-01, app-dev-02</div>
       <div><strong>Recommendation:</strong> Enable &#39;HTTPS Only&#39; on the App Service.</div>
+      <div class="meta">Context: <a href="#env-web">8. Application hosting</a> in the infrastructure overview</div>
     </div>
     
-    <div class="rule High">
+    <div class="rule High" id="rule-SEC-007">
       <div><strong>SEC-007 · NSG exposes management ports to the Internet</strong> <span class="pill sev-High">High</span></div>
       <div class="meta">2 of 4 evaluated resources · e.g. nsg-mgmt-eastus, nsg-mgmt-westeurope</div>
       <div><strong>Recommendation:</strong> Remove Internet-sourced RDP/SSH rules; use Azure Bastion or Just-in-Time VM access.</div>
+      <div class="meta">Context: <a href="#env-network">5. Networking</a> in the infrastructure overview</div>
     </div>
     
-    <div class="rule Medium">
+    <div class="rule Medium" id="rule-SEC-003">
       <div><strong>SEC-003 · Storage account accepts TLS &lt; 1.2</strong> <span class="pill sev-Medium">Medium</span></div>
       <div class="meta">2 of 10 evaluated resources · e.g. stdevdata02, stdevdata04</div>
       <div><strong>Recommendation:</strong> Set minimum TLS version to 1.2.</div>
+      <div class="meta">Context: <a href="#env-storage">6. Storage</a> in the infrastructure overview</div>
     </div>
     
-    <div class="rule Medium">
+    <div class="rule Medium" id="rule-SEC-004">
       <div><strong>SEC-004 · Key Vault purge protection disabled</strong> <span class="pill sev-Medium">Medium</span></div>
       <div class="meta">1 of 4 evaluated resources · e.g. kv-dev-00</div>
       <div><strong>Recommendation:</strong> Enable purge protection to guard secrets and keys against malicious or accidental deletion.</div>
+      <div class="meta">Context: <a href="#env-security">9. Security services</a> in the infrastructure overview</div>
     </div>
     
-    <div class="rule Medium">
+    <div class="rule Medium" id="rule-SEC-005">
       <div><strong>SEC-005 · SQL server reachable from public networks</strong> <span class="pill sev-Medium">Medium</span></div>
       <div class="meta">1 of 2 evaluated resources · e.g. sql-dev-01</div>
       <div><strong>Recommendation:</strong> Disable public network access and connect through Private Endpoints.</div>
+      <div class="meta">Context: <a href="#env-data">7. Databases</a> in the infrastructure overview</div>
     </div>
     
   
@@ -265,22 +474,25 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px
     
     
     
-    <div class="rule Medium">
+    <div class="rule Medium" id="rule-REL-001">
       <div><strong>REL-001 · VM has no zone or availability set</strong> <span class="pill sev-Medium">Medium</span></div>
       <div class="meta">15 of 24 evaluated resources · e.g. vm-dev-000, vm-dev-001, vm-dev-002, vm-dev-003, vm-dev-004 …</div>
       <div><strong>Recommendation:</strong> Deploy production VMs across availability zones or in a scale set / availability set.</div>
+      <div class="meta">Context: <a href="#env-compute">4. Compute</a> in the infrastructure overview</div>
     </div>
     
-    <div class="rule Low">
+    <div class="rule Low" id="rule-REL-003">
       <div><strong>REL-003 · Storage account uses locally redundant replication</strong> <span class="pill sev-Low">Low</span></div>
       <div class="meta">3 of 10 evaluated resources · e.g. stdevdata02, stprddata00, stprddata04</div>
       <div><strong>Recommendation:</strong> Use ZRS/GZRS for production data that needs zone or regional resilience.</div>
+      <div class="meta">Context: <a href="#env-storage">6. Storage</a> in the infrastructure overview</div>
     </div>
     
-    <div class="rule Low">
+    <div class="rule Low" id="rule-REL-004">
       <div><strong>REL-004 · SQL database not zone redundant</strong> <span class="pill sev-Low">Low</span></div>
       <div class="meta">3 of 6 evaluated resources · e.g. sql-dev-01/db1, sql-dev-01/db2, sql-prd-01/db1</div>
       <div><strong>Recommendation:</strong> Enable zone redundancy on business-critical databases.</div>
+      <div class="meta">Context: <a href="#env-data">7. Databases</a> in the infrastructure overview</div>
     </div>
     
   
@@ -289,34 +501,39 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px
     
     
     
-    <div class="rule High">
+    <div class="rule High" id="rule-COST-003">
       <div><strong>COST-003 · VM stopped but not deallocated</strong> <span class="pill sev-High">High</span></div>
       <div class="meta">4 of 24 evaluated resources · e.g. vm-dev-006, vm-dev-009, vm-prd-000, vm-prd-001</div>
       <div><strong>Recommendation:</strong> Deallocate stopped VMs (Stop from the portal/CLI) or schedule auto-shutdown.</div>
+      <div class="meta">Context: <a href="#env-compute">4. Compute</a> in the infrastructure overview</div>
     </div>
     
-    <div class="rule Medium">
+    <div class="rule Medium" id="rule-COST-001">
       <div><strong>COST-001 · Unattached managed disk</strong> <span class="pill sev-Medium">Medium</span></div>
       <div class="meta">10 of 34 evaluated resources · e.g. disk-dev-orphan-0, disk-dev-orphan-1, disk-dev-orphan-2, disk-dev-orphan-3, disk-prd-orphan-0 …</div>
       <div><strong>Recommendation:</strong> Snapshot if required, then delete orphaned disks.</div>
+      <div class="meta">Context: <a href="#env-compute">4. Compute</a> in the infrastructure overview</div>
     </div>
     
-    <div class="rule Medium">
+    <div class="rule Medium" id="rule-COST-005">
       <div><strong>COST-005 · Empty App Service plan</strong> <span class="pill sev-Medium">Medium</span></div>
       <div class="meta">2 of 4 evaluated resources · e.g. asp-dev-00, asp-dev-01</div>
       <div><strong>Recommendation:</strong> Delete or consolidate App Service plans with no apps.</div>
+      <div class="meta">Context: <a href="#env-web">8. Application hosting</a> in the infrastructure overview</div>
     </div>
     
-    <div class="rule Low">
+    <div class="rule Low" id="rule-COST-002">
       <div><strong>COST-002 · Unassociated public IP address</strong> <span class="pill sev-Low">Low</span></div>
       <div class="meta">2 of 6 evaluated resources · e.g. pip-eastus-0, pip-westeurope-0</div>
       <div><strong>Recommendation:</strong> Release public IPs that are not attached to any resource.</div>
+      <div class="meta">Context: <a href="#env-network">5. Networking</a> in the infrastructure overview</div>
     </div>
     
-    <div class="rule Low">
+    <div class="rule Low" id="rule-COST-004">
       <div><strong>COST-004 · Deallocated VM</strong> <span class="pill sev-Low">Low</span></div>
       <div class="meta">1 of 24 evaluated resources · e.g. vm-prd-008</div>
       <div><strong>Recommendation:</strong> Confirm the VM is still needed; delete it and its disks if not.</div>
+      <div class="meta">Context: <a href="#env-compute">4. Compute</a> in the infrastructure overview</div>
     </div>
     
   
@@ -325,16 +542,18 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px
     
     
     
-    <div class="rule Low">
+    <div class="rule Low" id="rule-OPS-001">
       <div><strong>OPS-001 · Previous-generation VM size</strong> <span class="pill sev-Low">Low</span></div>
       <div class="meta">5 of 24 evaluated resources · e.g. vm-dev-006, vm-prd-001, vm-prd-002, vm-prd-004, vm-prd-008</div>
       <div><strong>Recommendation:</strong> Resize to current generation (v5/v6) SKUs for better price-performance.</div>
+      <div class="meta">Context: <a href="#env-compute">4. Compute</a> in the infrastructure overview</div>
     </div>
     
-    <div class="rule Low">
+    <div class="rule Low" id="rule-OPS-002">
       <div><strong>OPS-002 · Log Analytics retention below target</strong> <span class="pill sev-Low">Low</span></div>
       <div class="meta">2 of 2 evaluated resources · e.g. log-dev-01, log-prd-01</div>
       <div><strong>Recommendation:</strong> Increase retention or archive to meet audit and investigation requirements.</div>
+      <div class="meta">Context: <a href="#env-monitoring">10. Monitoring and management</a> in the infrastructure overview</div>
     </div>
     
   
@@ -343,22 +562,25 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px
     
     
     
-    <div class="rule High">
+    <div class="rule High" id="rule-GOV-003">
       <div><strong>GOV-003 · Classic (ASM) resource in use</strong> <span class="pill sev-High">High</span></div>
       <div class="meta">1 of 1 evaluated resources · e.g. legacy-cloudservice</div>
       <div><strong>Recommendation:</strong> Migrate classic resources to Azure Resource Manager before platform retirement.</div>
+      <div class="meta">Context: <a href="#env-governance">11. Governance and tagging</a> in the infrastructure overview</div>
     </div>
     
-    <div class="rule Medium">
+    <div class="rule Medium" id="rule-GOV-001">
       <div><strong>GOV-001 · Required tags missing</strong> <span class="pill sev-Medium">Medium</span></div>
       <div class="meta">34 of 133 evaluated resources · e.g. app-prd-01, asp-dev-00, asp-dev-01, disk-dev-orphan-0, disk-prd-orphan-3 …</div>
       <div><strong>Recommendation:</strong> Enforce the tagging standard with Azure Policy (Require/Inherit a tag) and back-fill existing resources.</div>
+      <div class="meta">Context: <a href="#env-governance">11. Governance and tagging</a> in the infrastructure overview</div>
     </div>
     
-    <div class="rule Medium">
+    <div class="rule Medium" id="rule-GOV-002">
       <div><strong>GOV-002 · Resource outside approved regions</strong> <span class="pill sev-Medium">Medium</span></div>
       <div class="meta">8 of 133 evaluated resources · e.g. disk-dev-orphan-2, disk-prd-orphan-3, nic-prd-012, sql-prd-01, stprddata00 …</div>
       <div><strong>Recommendation:</strong> Apply the &#39;Allowed locations&#39; policy and plan migration of out-of-policy resources.</div>
+      <div class="meta">Context: <a href="#env-regions">3. Regional footprint</a> in the infrastructure overview</div>
     </div>
     
   
