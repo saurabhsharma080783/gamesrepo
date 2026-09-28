@@ -1,0 +1,6 @@
+{
+  "required_tags": ["environment", "owner", "costCenter"],
+  "allowed_locations": ["eastus", "westeurope", "uksouth"],
+  "min_log_retention_days": 90,
+  "disabled_rules": []
+}

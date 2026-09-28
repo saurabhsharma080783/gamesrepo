@@ -1,0 +1,1941 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contoso Azure Assessment</title>
+<style>
+:root {
+  --bg: #f5f7fa; --surface: #ffffff; --surface-2: #eef3f9; --ink: #0b0b0b; --ink-2: #52514e; --muted: #6b6a66;
+  --line: #e1e0d9; --primary: #0f3b68; --accent: #2a78d6; --bar: #2a78d6;
+  --high: #d03b3b; --medium: #c9622f; --low: #9a6700; --good: #0a7f0a;
+  --d-hub-fill: #e3ecf7; --d-hub-stroke: #0f3b68; --d-bad-fill: #fdf1f1;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d0d0d; --surface: #1a1a19; --surface-2: #232322; --ink: #ffffff; --ink-2: #c3c2b7; --muted: #9a998f;
+    --line: #2c2c2a; --primary: #9ec5f4; --accent: #3987e5; --bar: #3987e5;
+    --high: #e66767; --medium: #ec835a; --low: #fab219; --good: #0ca30c; --d-hub-fill: #16283d; --d-hub-stroke: #9ec5f4; --d-bad-fill: #2a1a1a; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d0d0d; --surface: #1a1a19; --surface-2: #232322; --ink: #ffffff; --ink-2: #c3c2b7; --muted: #9a998f;
+  --line: #2c2c2a; --primary: #9ec5f4; --accent: #3987e5; --bar: #3987e5;
+  --high: #e66767; --medium: #ec835a; --low: #fab219; --good: #0ca30c; --d-hub-fill: #16283d; --d-hub-stroke: #9ec5f4; --d-bad-fill: #2a1a1a; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+header.hero { background: #0f3b68; color: #fff; padding: 48px 24px 40px; }
+header.hero .wrap { max-width: 1180px; margin: 0 auto; }
+header.hero .eyebrow { color: #9ec5f4; font-weight: 700; letter-spacing: .08em; font-size: 13px; }
+header.hero h1 { margin: 6px 0 4px; font-size: clamp(28px, 5vw, 44px); }
+header.hero p { margin: 0; color: #cde2fb; }
+nav.toc { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line); }
+nav.toc .wrap { max-width: 1180px; margin: 0 auto; display: flex; gap: 4px; overflow-x: auto; padding: 0 16px; align-items: center; }
+nav.toc a { color: var(--ink-2); text-decoration: none; padding: 12px 10px; white-space: nowrap; font-size: 14px; }
+nav.toc a:hover { color: var(--accent); }
+nav.toc button { margin-left: auto; background: none; border: 1px solid var(--line); color: var(--ink-2); border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+main { max-width: 1180px; margin: 0 auto; padding: 24px 16px 64px; }
+section { margin-top: 36px; }
+h2 { color: var(--primary); font-size: 24px; margin: 0 0 12px; }
+h3 { font-size: 17px; margin: 20px 0 8px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 20px; }
+.grid { display: grid; gap: 16px; }
+.kpis { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.kpi { text-align: center; padding: 18px 12px; }
+.kpi .v { font-size: 30px; font-weight: 700; color: var(--primary); }
+.kpi .l { color: var(--ink-2); font-size: 13px; }
+.two { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+.bars { list-style: none; margin: 0; padding: 0; }
+.bars li { display: grid; grid-template-columns: minmax(110px, 38%) 1fr 48px; gap: 10px; align-items: center; padding: 4px 0; font-size: 14px; }
+.bars .lbl { color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bars .track { height: 14px; }
+.bars .fill { height: 100%; background: var(--bar); border-radius: 0 4px 4px 0; min-width: 2px; }
+.bars .val { text-align: right; font-variant-numeric: tabular-nums; }
+.bars li:hover .fill { filter: brightness(1.15); }
+.score { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+.ring { --p: 50; --c: var(--accent); width: 120px; height: 120px; border-radius: 50%; display: grid; place-items: center;
+  background: conic-gradient(var(--c) calc(var(--p) * 1%), var(--surface-2) 0); }
+.ring span { width: 92px; height: 92px; border-radius: 50%; background: var(--surface); display: grid; place-items: center; font-size: 28px; font-weight: 700; }
+ul.obs li { margin-bottom: 6px; }
+.pill { display: inline-block; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; border: 1px solid currentColor; }
+.sev-High, .kpi .v.sev-High { color: var(--high); } .sev-Medium { color: var(--medium); } .sev-Low { color: var(--low); }
+.r-Good { color: var(--good); } .r-Fair { color: var(--low); } .r-Poor { color: var(--high); } .r-Not-assessed { color: var(--muted); }
+.notice { border-left: 4px solid var(--accent); }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { background: var(--surface-2); color: var(--ink-2); font-weight: 600; position: sticky; top: 0; cursor: pointer; user-select: none; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+tbody tr:hover { background: var(--surface-2); }
+.filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.filters input, .filters select { background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 7px 10px; font: inherit; font-size: 14px; }
+.filters input { flex: 1 1 220px; }
+.rule { border-left: 4px solid var(--line); padding: 10px 14px; margin: 10px 0; background: var(--surface); border-radius: 0 8px 8px 0; }
+.rule.High { border-left-color: var(--high); } .rule.Medium { border-left-color: var(--medium); } .rule.Low { border-left-color: var(--low); }
+.rule .meta { color: var(--ink-2); font-size: 13px; }
+.phases { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.phase h3 { margin-top: 0; }
+.muted { color: var(--muted); }
+.lede { color: var(--ink-2); max-width: 75ch; margin: 0 0 12px; }
+.env-toc { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 0 0 16px; font-size: 14px; }
+.env-toc a, .rule a { color: var(--accent); }
+article.env { margin-bottom: 16px; scroll-margin-top: 56px; }
+article.env h3 { margin-top: 0; color: var(--primary); }
+article.env p { max-width: 80ch; }
+.env-list { padding-left: 20px; max-width: 80ch; } .env-list li { margin-bottom: 6px; }
+.env-table { margin: 12px 0; }
+caption { text-align: left; font-weight: 600; color: var(--ink-2); padding: 0 0 6px; }
+.related { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+.related-label { font-weight: 600; color: var(--ink-2); font-size: 13px; margin-right: 4px; }
+.related a.pill { text-decoration: none; font-weight: 600; }
+.rule { scroll-margin-top: 56px; }
+article.arch h4 { font-size: 14px; margin: 16px 0 6px; color: var(--ink-2); }
+.pattern { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 16px; }
+.pattern strong { color: var(--accent); }
+.pattern-label { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; }
+.conf-High { color: var(--good); } .conf-Medium { color: var(--low); } .conf-Low { color: var(--high); }
+table.glance a { color: var(--accent); text-decoration: none; }
+.considerations li::marker { color: var(--accent); }
+figure.topology-wrap { margin: 16px 0; }
+figure.topology-wrap figcaption { color: var(--muted); font-size: 13px; margin-top: 6px; }
+svg.topology { width: 100%; max-width: 880px; min-width: 640px; height: auto; display: block; margin: 0 auto; background: var(--surface); }
+svg.topology .node rect { stroke-width: 1.4; }
+svg.topology .node-hub rect { fill: var(--d-hub-fill); stroke: var(--d-hub-stroke); stroke-width: 2; }
+svg.topology .node-spoke rect { fill: var(--surface); stroke: var(--accent); }
+svg.topology .node-other rect { fill: var(--surface); stroke: var(--muted); }
+svg.topology .node-isolated rect { fill: var(--d-bad-fill); stroke: var(--high); stroke-dasharray: 5 4; }
+svg.topology .node-onprem rect { fill: var(--surface-2); stroke: var(--ink-2); }
+svg.topology text { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+svg.topology .t-title { font-size: 13px; font-weight: 700; fill: var(--ink); }
+svg.topology .t-sub { font-size: 11px; fill: var(--ink-2); }
+svg.topology .t-svc { font-size: 10.5px; fill: var(--d-hub-stroke); font-weight: 600; }
+svg.topology .t-note { font-size: 10.5px; } svg.topology .t-note.ok { fill: var(--good); } svg.topology .t-note.warn { fill: var(--medium); }
+svg.topology .t-group { font-size: 12px; font-weight: 700; fill: var(--ink-2); }
+svg.topology .edge { stroke-width: 2; fill: none; }
+svg.topology .edge-hub-spoke, svg.topology .edge-other { stroke: var(--muted); }
+svg.topology .edge-hub-hub { stroke: var(--d-hub-stroke); stroke-dasharray: 8 5; }
+svg.topology .edge-spoke-spoke { stroke: var(--high); stroke-dasharray: 6 4; }
+svg.topology .edge-onprem { stroke: var(--ink-2); stroke-dasharray: 2 4; }
+svg.topology .edge-label { font-size: 11px; fill: var(--ink-2); } svg.topology .edge-label.bad { fill: var(--high); }
+footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px; }
+@media print { nav.toc, .filters { display: none; } body { background: #fff; } .card { break-inside: avoid; } }
+</style>
+</head>
+<body>
+<header class="hero"><div class="wrap">
+  <div class="eyebrow">AZURE ENVIRONMENT ASSESSMENT</div>
+  <h1>Contoso</h1>
+  <p>Source: sample-inventory.csv · Exported 2026-09-20 · Report generated 27 September 2026 17:24</p>
+</div></header>
+<nav class="toc"><div class="wrap">
+  <a href="#summary">Summary</a><a href="#architecture">Architecture</a><a href="#environment">Infrastructure</a><a href="#inventory">Inventory</a><a href="#scorecard">Scorecard</a>
+  <a href="#findings">Findings</a><a href="#roadmap">Roadmap</a><a href="#details">Detailed findings</a>
+  <a href="#resources">Resources</a>
+  <button type="button" id="theme" aria-label="Toggle colour theme">Theme</button>
+</div></nav>
+<main>
+<section id="summary">
+  <h2>Executive summary</h2>
+  
+  <div class="grid kpis">
+    <div class="card kpi"><div class="v">152</div><div class="l">Resources</div></div>
+    <div class="card kpi"><div class="v">3</div><div class="l">Subscriptions</div></div>
+    <div class="card kpi"><div class="v">23</div><div class="l">Resource groups</div></div>
+    <div class="card kpi"><div class="v">5</div><div class="l">Regions</div></div>
+    <div class="card kpi"><div class="v sev-High">17</div><div class="l">High findings</div></div>
+    <div class="card kpi"><div class="v">78%</div><div class="l">Tag coverage</div></div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <div class="score">
+      <div class="ring" style="--p: 76; --c: #FAB219"><span>76</span></div>
+      <div>
+        <div class="muted">Overall posture score</div>
+        <div style="font-size:22px;font-weight:700" class="r-Fair">Fair</div>
+        
+        <div class="muted">106 findings · 17 high · 73 medium · 16 low</div>
+      </div>
+    </div>
+    <h3>Key observations</h3>
+    
+    <ul class="obs"><li>152 resources were assessed across 3 subscription(s), 23 resource groups and 5 region(s).</li><li>Architecture at a glance: network topology is multi-region hub-and-spoke with exceptions; hybrid connectivity is site-to-site VPN to on-premises; subscription model is landing-zone style: platform and workload subscriptions, split by environment.</li><li>106 finding(s) were raised: 17 high, 73 medium and 16 low severity, affecting 78 resources.</li><li>Security is the weakest area (score 68/100); Governance is the strongest (86/100).</li><li>78% of resources carry all required tags (environment, owner, costCenter).</li><li>Priority high-severity issues: Storage account permits HTTP (4); Storage account allows anonymous blob access (4); VM stopped but not deallocated (4).</li></ul>
+  </div>
+</section>
+
+
+
+<section id="architecture">
+  <h2>Architecture assessment</h2>
+  <p class="lede">The architecture patterns the environment follows, compared with Microsoft's reference architectures (Cloud Adoption Framework Azure landing zone and Well-Architected Framework). Confidence shows how firmly the inventory supports each conclusion: High means direct configuration evidence, Medium means inferred from resource types and naming, Low means the export lacked the data. Identity, role assignments, Azure Policy and management groups are not part of a resource inventory and are out of scope.</p>
+  <div class="card table-wrap" style="padding:0">
+    <table class="glance">
+      <thead><tr><th>Area</th><th>Pattern identified</th><th>Confidence</th></tr></thead>
+      <tbody>
+        <tr><td><a href="#arch-network">1. Network topology</a></td><td><strong>Multi-region hub-and-spoke with exceptions</strong></td><td><span class="pill conf-High">High</span></td></tr>
+      
+        <tr><td><a href="#arch-hybrid">2. Hybrid connectivity</a></td><td><strong>Site-to-site VPN to on-premises</strong></td><td><span class="pill conf-High">High</span></td></tr>
+      
+        <tr><td><a href="#arch-traffic">3. Traffic flow and perimeter security</a></td><td><strong>Defence in depth (central firewall, WAF-protected ingress, private endpoints for PaaS, Bastion for admin access)</strong></td><td><span class="pill conf-High">High</span></td></tr>
+      
+        <tr><td><a href="#arch-landing_zone">4. Subscription and landing zone model</a></td><td><strong>Landing-zone style: platform and workload subscriptions, split by environment</strong></td><td><span class="pill conf-Medium">Medium</span></td></tr>
+      
+        <tr><td><a href="#arch-hosting">5. Application hosting architecture</a></td><td><strong>Hybrid IaaS/PaaS, three-tier (web, application, data)</strong></td><td><span class="pill conf-Medium">Medium</span></td></tr>
+      
+        <tr><td><a href="#arch-resilience">6. Resilience and disaster recovery</a></td><td><strong>Multi-region, but not in Azure region pairs; no DR replication evidence</strong></td><td><span class="pill conf-Medium">Medium</span></td></tr>
+      
+        <tr><td><a href="#arch-operations">7. Operations and monitoring</a></td><td><strong>Federated logging (one workspace per subscription)</strong></td><td><span class="pill conf-Medium">Medium</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  
+  <article class="card env arch" id="arch-network">
+    <h3>1. Network topology</h3>
+    <p class="pattern"><span class="pattern-label">Pattern identified</span> <strong>Multi-region hub-and-spoke with exceptions</strong> <span class="pill conf-High">High confidence</span></p>
+    <p>The network is built around 2 hub virtual networks (vnet-hub-eastus in eastus and vnet-hub-westeurope in westeurope), which host shared services: Azure Bastion, Azure Firewall and VPN gateway. 3 spoke networks peer to the hubs and carry the workloads. This is the hub-and-spoke pattern recommended in the Azure landing zone reference architecture: shared connectivity, inspection and management access are centralised in the hub, and workloads are isolated in spokes.</p><p>The regional hubs are peered with each other (global VNet peering), giving cross-region connectivity between spokes through their hubs.</p>
+    
+    <figure class="topology-wrap">
+      <div class="table-wrap"><svg class="topology" viewBox="0 0 779 783" role="img" aria-label="Network topology: Multi-region hub-and-spoke with exceptions" xmlns="http://www.w3.org/2000/svg">
+<line class="edge edge-onprem" x1="240.0" y1="101.0" x2="240.0" y2="179.0"/>
+<text class="edge-label" x="246.0" y="144.0">VPN</text>
+<path class="edge edge-spoke-spoke" d="M355.0,422.1 Q240.0,480.6 125.0,422.1" fill="none"/>
+<text class="edge-label bad" x="240.0" y="469.6" text-anchor="middle">direct spoke-to-spoke peering</text>
+<line class="edge edge-hub-spoke" x1="240.0" y1="275.2" x2="355.0" y2="341.5"/>
+<line class="edge edge-hub-spoke" x1="654.0" y1="275.2" x2="654.0" y2="341.5"/>
+<line class="edge edge-hub-spoke" x1="240.0" y1="275.2" x2="125.0" y2="341.5"/>
+<line class="edge edge-hub-hub" x1="341.2" y1="227.1" x2="552.8" y2="227.1"/>
+<text class="edge-label" x="447.0" y="221.1" text-anchor="middle">global peering</text>
+<g class="node node-hub"><title>vnet-hub-eastus | Contoso-Connectivity | eastus · 10.0.0.0/22 | Bastion · Firewall · VPN gateway</title><rect x="138.8" y="179.0" width="202.4" height="96.2" rx="7"/>
+<text class="t-title" x="240.0" y="197.2" text-anchor="middle">vnet-hub-eastus</text>
+<text class="t-sub" x="240.0" y="214.8" text-anchor="middle">Contoso-Connectivity</text>
+<text class="t-sub" x="240.0" y="232.3" text-anchor="middle">eastus · 10.0.0.0/22</text>
+<text class="t-svc" x="240.0" y="249.8" text-anchor="middle">Bastion · Firewall · VPN gateway</text>
+</g>
+<g class="node node-spoke"><title>vnet-dev-eastus | Contoso-NonProduction | eastus · 10.2.0.0/16</title><rect x="23.8" y="341.5" width="202.4" height="80.6" rx="7"/>
+<text class="t-title" x="125.0" y="359.7" text-anchor="middle">vnet-dev-eastus</text>
+<text class="t-sub" x="125.0" y="377.2" text-anchor="middle">Contoso-NonProduction</text>
+<text class="t-sub" x="125.0" y="394.8" text-anchor="middle">eastus · 10.2.0.0/16</text>
+<text class="t-note warn" x="125.0" y="413.0" text-anchor="middle">egress not via firewall</text>
+</g>
+<g class="node node-spoke"><title>vnet-prd-eastus | Contoso-Production | eastus · 10.1.0.0/16</title><rect x="253.8" y="341.5" width="202.4" height="80.6" rx="7"/>
+<text class="t-title" x="355.0" y="359.7" text-anchor="middle">vnet-prd-eastus</text>
+<text class="t-sub" x="355.0" y="377.2" text-anchor="middle">Contoso-Production</text>
+<text class="t-sub" x="355.0" y="394.8" text-anchor="middle">eastus · 10.1.0.0/16</text>
+<text class="t-note ok" x="355.0" y="413.0" text-anchor="middle">egress via hub firewall</text>
+</g>
+<g class="node node-hub"><title>vnet-hub-westeurope | Contoso-Connectivity | westeurope · 10.10.0.0/22 | Firewall</title><rect x="552.8" y="179.0" width="202.4" height="96.2" rx="7"/>
+<text class="t-title" x="654.0" y="197.2" text-anchor="middle">vnet-hub-westeurope</text>
+<text class="t-sub" x="654.0" y="214.8" text-anchor="middle">Contoso-Connectivity</text>
+<text class="t-sub" x="654.0" y="232.3" text-anchor="middle">westeurope · 10.10.0.0/22</text>
+<text class="t-svc" x="654.0" y="249.8" text-anchor="middle">Firewall</text>
+</g>
+<g class="node node-spoke"><title>vnet-prd-westeurope | Contoso-Production | westeurope · 10.11.0.0/16</title><rect x="552.8" y="341.5" width="202.4" height="80.6" rx="7"/>
+<text class="t-title" x="654.0" y="359.7" text-anchor="middle">vnet-prd-westeurope</text>
+<text class="t-sub" x="654.0" y="377.2" text-anchor="middle">Contoso-Production</text>
+<text class="t-sub" x="654.0" y="394.8" text-anchor="middle">westeurope · 10.11.0.0/16</text>
+<text class="t-note ok" x="654.0" y="413.0" text-anchor="middle">egress via hub firewall</text>
+</g>
+<g class="node node-isolated"><title>vnet-dev-sandbox | Contoso-NonProduction | uksouth · 10.99.0.0/16</title><rect x="23.8" y="562.5" width="202.4" height="80.6" rx="7"/>
+<text class="t-title" x="125.0" y="580.7" text-anchor="middle">vnet-dev-sandbox</text>
+<text class="t-sub" x="125.0" y="598.2" text-anchor="middle">Contoso-NonProduction</text>
+<text class="t-sub" x="125.0" y="615.8" text-anchor="middle">uksouth · 10.99.0.0/16</text>
+<text class="t-note warn" x="125.0" y="634.0" text-anchor="middle">not peered to any network</text>
+</g>
+<g class="node node-onprem"><title>On-premises | VPN</title><rect x="138.8" y="29.5" width="202.4" height="71.5" rx="7"/>
+<text class="t-title" x="240.0" y="47.7" text-anchor="middle">On-premises</text>
+<text class="t-sub" x="240.0" y="65.2" text-anchor="middle">VPN</text>
+</g>
+<text class="t-group" x="10" y="535.2">Not attached to a hub</text>
+<line class="edge edge-hub-spoke" x1="10.0" y1="731.5" x2="46.8" y2="731.5"/><text class="edge-label" x="56.0" y="735.5">Hub-spoke peering</text>
+<line class="edge edge-hub-hub" x1="240.0" y1="731.5" x2="276.8" y2="731.5"/><text class="edge-label" x="286.0" y="735.5">Hub-to-hub peering</text>
+<line class="edge edge-spoke-spoke" x1="470.0" y1="731.5" x2="506.8" y2="731.5"/><text class="edge-label" x="516.0" y="735.5">Spoke-to-spoke peering</text>
+<line class="edge edge-onprem" x1="10.0" y1="760.1" x2="46.8" y2="760.1"/><text class="edge-label" x="56.0" y="764.1">On-premises link</text>
+</svg></div>
+      <figcaption>Network topology derived from VNet peerings (Multi-region hub-and-spoke with exceptions). Hover a network for details.</figcaption>
+    </figure>
+    
+    <h4>Evidence from the inventory</h4><ul class="env-list"><li>Hub vnet-hub-eastus (eastus, Contoso-Connectivity): address space 10.0.0.0/22; services: Azure Bastion, Azure Firewall and VPN gateway; spokes: vnet-prd-eastus and vnet-dev-eastus.</li><li>Hub vnet-hub-westeurope (westeurope, Contoso-Connectivity): address space 10.10.0.0/22; services: Azure Firewall; spokes: vnet-prd-westeurope.</li><li>Spokes vnet-prd-eastus and vnet-prd-westeurope send Internet-bound traffic to the hub firewall through a 0.0.0.0/0 route. vnet-dev-eastus has no such route, so its outbound traffic bypasses central inspection.</li><li>vnet-prd-eastus (Contoso-Production) is peered directly with vnet-dev-eastus (Contoso-NonProduction), bypassing the hub.</li><li>vnet-dev-sandbox (uksouth, Contoso-NonProduction) is not peered to any network.</li></ul>
+    
+    <div class="table-wrap env-table">
+      <table>
+        <caption>Virtual networks</caption>
+        <thead><tr><th>VNet</th><th>Role</th><th>Subscription</th><th>Region</th><th>Address space</th><th>Peered with</th><th>Default route via firewall</th></tr></thead>
+        <tbody><tr><td>vnet-hub-eastus</td><td>Hub</td><td>Contoso-Connectivity</td><td>eastus</td><td>10.0.0.0/22</td><td>vnet-dev-eastus, vnet-hub-westeurope, vnet-prd-eastus</td><td>-</td></tr><tr><td>vnet-hub-westeurope</td><td>Hub</td><td>Contoso-Connectivity</td><td>westeurope</td><td>10.10.0.0/22</td><td>vnet-hub-eastus, vnet-prd-westeurope</td><td>-</td></tr><tr><td>vnet-dev-eastus</td><td>Spoke</td><td>Contoso-NonProduction</td><td>eastus</td><td>10.2.0.0/16</td><td>vnet-hub-eastus, vnet-prd-eastus</td><td>No</td></tr><tr><td>vnet-prd-eastus</td><td>Spoke</td><td>Contoso-Production</td><td>eastus</td><td>10.1.0.0/16</td><td>vnet-dev-eastus, vnet-hub-eastus</td><td>Yes</td></tr><tr><td>vnet-prd-westeurope</td><td>Spoke</td><td>Contoso-Production</td><td>westeurope</td><td>10.11.0.0/16</td><td>vnet-hub-westeurope</td><td>Yes</td></tr><tr><td>vnet-dev-sandbox</td><td>Isolated</td><td>Contoso-NonProduction</td><td>uksouth</td><td>10.99.0.0/16</td><td>-</td><td>No</td></tr></tbody>
+      </table>
+    </div>
+    
+    <h4>Considerations against the reference architecture</h4><ul class="env-list considerations"><li>Remove direct spoke-to-spoke peerings and route that traffic through the hub firewall, particularly between production and non-production (Contoso-NonProduction and Contoso-Production).</li><li>Add a user-defined route (0.0.0.0/0 to the hub firewall) to vnet-dev-eastus so all egress is inspected.</li><li>Decide whether vnet-dev-sandbox should join the hub or be removed; unmanaged islands tend to accumulate public exposure.</li></ul>
+    
+    <div class="related"><span class="related-label">Related findings</span>
+      <a class="pill sev-High" href="#rule-SEC-007">SEC-007 · NSG exposes management ports to the Internet (2)</a>
+    </div>
+    
+  </article>
+  
+  <article class="card env arch" id="arch-hybrid">
+    <h3>2. Hybrid connectivity</h3>
+    <p class="pattern"><span class="pattern-label">Pattern identified</span> <strong>Site-to-site VPN to on-premises</strong> <span class="pill conf-High">High confidence</span></p>
+    <p>The environment connects to on-premises through a site-to-site VPN, terminated in the hub network vnet-hub-eastus. Spokes use the hub gateway through gateway transit, which is the recommended shared-gateway design.</p>
+    
+    <h4>Evidence from the inventory</h4><ul class="env-list"><li>vgw-hub-eastus: Vpn gateway, SKU VpnGw2AZ, zone-redundant, active-standby, deployed in vnet-hub-eastus.</li><li>lng-onprem-dc1: on-premises site at 203.0.113.10 advertising 192.168.0.0/16.</li><li>cn-hub-eastus-to-dc1: IPsec connection, status Connected.</li></ul>
+    
+    <h4>Considerations against the reference architecture</h4><ul class="env-list considerations"><li>Only eastus has a gateway; spokes in westeurope reach on-premises across regions, and lose on-premises connectivity if that region is unavailable. Add a gateway in each regional hub.</li><li>A single VPN tunnel runs over the Internet; for production workloads with latency or bandwidth needs, consider ExpressRoute with VPN as backup.</li><li>Configure VPN gateways as active-active with two on-premises devices to remove a single point of failure.</li></ul>
+    
+  </article>
+  
+  <article class="card env arch" id="arch-traffic">
+    <h3>3. Traffic flow and perimeter security</h3>
+    <p class="pattern"><span class="pattern-label">Pattern identified</span> <strong>Defence in depth (central firewall, WAF-protected ingress, private endpoints for PaaS, Bastion for admin access)</strong> <span class="pill conf-High">High confidence</span></p>
+    <p>Inbound: traffic enters through 1 Application Gateway (agw-prd-eastus; WAF enabled) and 1 load balancer.</p><p>Outbound and east-west: 2 Azure Firewalls (afw-hub-eastus and afw-hub-westeurope) inspect traffic; 2 spokes force Internet-bound traffic through them.</p><p>Administration: Azure Bastion (bas-hub-eastus) provides browser-based RDP/SSH without public IPs on VMs. However, some network security groups still allow RDP or SSH from the Internet.</p><p>PaaS access: 2 private endpoints connect PaaS services privately (sql-prd-01 and stprddata00). 15 services still accept public network traffic.</p>
+    
+    <h4>Evidence from the inventory</h4><ul class="env-list"><li>Web application firewall: agw-prd-eastus.</li><li>DDoS Network Protection plan: none.</li></ul>
+    
+    <h4>Considerations against the reference architecture</h4><ul class="env-list considerations"><li>Remove Internet-sourced RDP/SSH rules now that Bastion is available.</li><li>Extend private endpoints to the remaining PaaS services and disable their public network access (stprddata00, stprddata01, stprddata02, stprddata03, stprddata04 and kv-prd-00 …).</li><li>Consider DDoS Network Protection for virtual networks with Internet-facing workloads.</li></ul>
+    
+    <div class="related"><span class="related-label">Related findings</span>
+      <a class="pill sev-High" href="#rule-SEC-007">SEC-007 · NSG exposes management ports to the Internet (2)</a><a class="pill sev-Medium" href="#rule-SEC-005">SEC-005 · SQL server reachable from public networks (1)</a><a class="pill sev-High" href="#rule-SEC-002">SEC-002 · Storage account allows anonymous blob access (4)</a><a class="pill sev-High" href="#rule-SEC-006">SEC-006 · Web app does not enforce HTTPS (2)</a>
+    </div>
+    
+  </article>
+  
+  <article class="card env arch" id="arch-landing_zone">
+    <h3>4. Subscription and landing zone model</h3>
+    <p class="pattern"><span class="pattern-label">Pattern identified</span> <strong>Landing-zone style: platform and workload subscriptions, split by environment</strong> <span class="pill conf-Medium">Medium confidence</span></p>
+    <p>The 3 subscriptions in scope appear to play these roles: Contoso-Connectivity (platform: connectivity), Contoso-NonProduction (workload: non-production) and Contoso-Production (workload: production). Roles are inferred from subscription names, environment tags and the resources each contains.</p><p>Separating shared platform services (connectivity, management) from application workloads follows the Azure landing zone model in the Cloud Adoption Framework, where platform teams own the hub and workload teams own their subscriptions.</p>
+    
+    
+    
+    <div class="table-wrap env-table">
+      <table>
+        <caption>Subscription roles</caption>
+        <thead><tr><th>Subscription</th><th>Inferred role</th><th class="num">Resources</th><th>Main resource types</th></tr></thead>
+        <tbody><tr><td>Contoso-Connectivity</td><td>Platform: connectivity</td><td class="num">21</td><td>Public IP addresses (6), Network security groups (4), Virtual networks (2)</td></tr><tr><td>Contoso-NonProduction</td><td>Workload: non-production</td><td class="num">54</td><td>Managed disks (14), Virtual machines (10), Network interfaces (10)</td></tr><tr><td>Contoso-Production</td><td>Workload: production</td><td class="num">77</td><td>Managed disks (20), Virtual machines (14), Network interfaces (14)</td></tr></tbody>
+      </table>
+    </div>
+    
+    <h4>Considerations against the reference architecture</h4><ul class="env-list considerations"><li>There is no dedicated management subscription; Log Analytics workspaces sit in Contoso-NonProduction and Contoso-Production. The landing zone model places central logging, automation and backup in a management subscription.</li><li>No identity subscription was found. If domain controllers or identity services run in Azure, isolate them in a dedicated identity subscription.</li><li>Management groups, Azure Policy assignments and RBAC are not part of a resource inventory; review them separately to confirm the landing zone governance.</li></ul>
+    
+  </article>
+  
+  <article class="card env arch" id="arch-hosting">
+    <h3>5. Application hosting architecture</h3>
+    <p class="pattern"><span class="pattern-label">Pattern identified</span> <strong>Hybrid IaaS/PaaS, three-tier (web, application, data)</strong> <span class="pill conf-Medium">Medium confidence</span></p>
+    <p>Workloads run on IaaS virtual machines and App Service web apps: 24 VM-based resources and 16 managed (PaaS) services. VMs make up the majority, so the estate is primarily IaaS; much of the operating system patching, scaling and availability work remains with the customer.</p><p>Tiers identified: presentation (Application Gateway and App Service), application (VMs and App Service) and data (SQL databases and SQL servers).</p>
+    
+    <h4>Evidence from the inventory</h4><ul class="env-list"><li>Virtual machines: 24; scale sets: 0; AKS clusters: 0; web apps: 8; function apps: 0; databases and caches: 8.</li></ul>
+    
+    <h4>Considerations against the reference architecture</h4><ul class="env-list considerations"><li>No VM scale sets are used, so VM capacity does not scale automatically. Stateless tiers are good candidates for scale sets or App Service.</li><li>Review VM-hosted components for replatforming to PaaS (App Service, Azure SQL, AKS) to reduce operational overhead.</li></ul>
+    
+    <div class="related"><span class="related-label">Related findings</span>
+      <a class="pill sev-Low" href="#rule-OPS-001">OPS-001 · Previous-generation VM size (5)</a><a class="pill sev-High" href="#rule-COST-003">COST-003 · VM stopped but not deallocated (4)</a><a class="pill sev-Medium" href="#rule-COST-005">COST-005 · Empty App Service plan (2)</a>
+    </div>
+    
+  </article>
+  
+  <article class="card env arch" id="arch-resilience">
+    <h3>6. Resilience and disaster recovery</h3>
+    <p class="pattern"><span class="pattern-label">Pattern identified</span> <strong>Multi-region, but not in Azure region pairs; no DR replication evidence</strong> <span class="pill conf-Medium">Medium confidence</span></p>
+    <p>Production runs in 4 regions (eastus: 36, westeurope: 24, uksouth: 10, centralindia: 7 resources). None of these regions are paired with each other. Running in several regions only provides disaster recovery if data is replicated and workloads can fail over; the inventory shows the building blocks, not a tested failover plan.</p><p>Within regions: 9 of 24 VMs use availability zones, 3 of 10 storage accounts replicate across zones and 4 replicate to a paired region, and 1 of 6 SQL databases is zone redundant.</p><p>Backup and site recovery: 0 vaults found, so there is no evidence of Azure Backup or Azure Site Recovery protecting these workloads.</p>
+    
+    
+    
+    <h4>Considerations against the reference architecture</h4><ul class="env-list considerations"><li>Deploy Recovery Services vaults and back up VMs and databases; define RPO/RTO per workload.</li><li>Decide the DR strategy per workload (active/active, active/passive or backup-and-restore), then replicate data and test failover.</li><li>Place production VMs across availability zones (or use zone-redundant scale sets) to survive a datacenter failure.</li></ul>
+    
+    <div class="related"><span class="related-label">Related findings</span>
+      <a class="pill sev-Medium" href="#rule-REL-001">REL-001 · VM has no zone or availability set (15)</a><a class="pill sev-Low" href="#rule-REL-003">REL-003 · Storage account uses locally redundant replication (3)</a><a class="pill sev-Low" href="#rule-REL-004">REL-004 · SQL database not zone redundant (3)</a>
+    </div>
+    
+  </article>
+  
+  <article class="card env arch" id="arch-operations">
+    <h3>7. Operations and monitoring</h3>
+    <p class="pattern"><span class="pattern-label">Pattern identified</span> <strong>Federated logging (one workspace per subscription)</strong> <span class="pill conf-Medium">Medium confidence</span></p>
+    <p>Logs go to 2 Log Analytics workspaces (log-prd-01 in Contoso-Production and log-dev-01 in Contoso-NonProduction). Each subscription keeps its own workspace, which simplifies access control per environment but makes cross-environment queries and a single security view (Microsoft Sentinel) harder.</p><p>Contoso-Connectivity has no workspace of its own and must send logs elsewhere.</p><p>Automation accounts: 0. Diagnostic settings, alert rules and Azure Monitor agent coverage are not part of a resource inventory and need a separate review.</p>
+    
+    
+    
+    <h4>Considerations against the reference architecture</h4><ul class="env-list considerations"><li>The landing zone model recommends a central workspace in the management subscription, with resource-context access for workload teams.</li></ul>
+    
+    <div class="related"><span class="related-label">Related findings</span>
+      <a class="pill sev-Low" href="#rule-OPS-002">OPS-002 · Log Analytics retention below target (2)</a>
+    </div>
+    
+  </article>
+  
+</section>
+
+<section id="environment">
+  <h2>Infrastructure overview</h2>
+  <p class="lede">What the environment contains, how it is organised and how each area is configured, as understood from the inventory export. Each part links to the related findings so it can be read alongside them.</p>
+  <nav class="env-toc" aria-label="Infrastructure overview contents">
+    <a href="#env-estate">1. Estate at a glance</a><a href="#env-subscriptions">2. Subscriptions and resource organisation</a><a href="#env-regions">3. Regional footprint</a><a href="#env-compute">4. Compute</a><a href="#env-network">5. Networking</a><a href="#env-storage">6. Storage</a><a href="#env-data">7. Databases</a><a href="#env-web">8. Application hosting</a><a href="#env-security">9. Security services</a><a href="#env-monitoring">10. Monitoring and management</a><a href="#env-governance">11. Governance and tagging</a>
+  </nav>
+  
+  <article class="card env" id="env-estate">
+    <h3>1. Estate at a glance</h3>
+    <p>The environment described by sample-inventory.csv contains 152 Azure resources organised into 3 subscriptions and 23 resource groups, deployed across 5 regions. eastus is the primary region, hosting 49% of all resources, followed by westeurope (27%), uksouth (18%) and centralindia (5%).</p><p>By function, the estate is made up of compute (38%), networking (38%), application hosting (8%), storage (7%), databases (5%), security services (3%), monitoring and management (1%) and classic (legacy) resources (1%). The most common resource types are managed disks (34), virtual machines (24), network interfaces (24), storage accounts (10) and App Services (8).</p><p>The hosting model is predominantly infrastructure-as-a-service (IaaS), built around virtual machines: there are 24 virtual machines alongside 20 managed application or database services.</p>
+    
+    
+    <div class="table-wrap env-table">
+      <table>
+        <caption>Resources by functional area</caption>
+        <thead><tr><th>Area</th><th class="num">Resources</th><th>% of estate</th><th>Main resource types</th></tr></thead>
+        <tbody><tr><td>Compute</td><td class="num">58</td><td>38%</td><td>Managed disks (34), Virtual machines (24)</td></tr><tr><td>Networking</td><td class="num">57</td><td>38%</td><td>Network interfaces (24), Network security groups (7), Virtual networks (6)</td></tr><tr><td>Application hosting</td><td class="num">12</td><td>8%</td><td>App Services (8), App Service plans (4)</td></tr><tr><td>Storage</td><td class="num">10</td><td>7%</td><td>Storage accounts (10)</td></tr><tr><td>Databases</td><td class="num">8</td><td>5%</td><td>SQL databases (6), SQL servers (2)</td></tr><tr><td>Security services</td><td class="num">4</td><td>3%</td><td>Key vaults (4)</td></tr><tr><td>Monitoring and management</td><td class="num">2</td><td>1%</td><td>Log Analytics workspaces (2)</td></tr><tr><td>Classic (legacy) resources</td><td class="num">1</td><td>1%</td><td>Classic cloud services (1)</td></tr></tbody>
+      </table>
+    </div>
+    
+    
+  </article>
+  
+  <article class="card env" id="env-subscriptions">
+    <h3>2. Subscriptions and resource organisation</h3>
+    <p>Resources are spread across 3 subscriptions. The breakdown below describes what each subscription contains, which helps show how workloads and environments are separated.</p><p>On average a resource group holds 6.6 resources. The largest are rg-prd-app01 in Contoso-Production (19), rg-dev-app01 in Contoso-NonProduction (13) and rg-prd-app02 in Contoso-Production (12).</p>
+    <ul class="env-list"><li><strong>Contoso-Production:</strong> 77 resources in 9 resource groups across 4 regions (centralindia, eastus, uksouth and westeurope). It mainly contains managed disks (20), virtual machines (14) and network interfaces (14). Resources are tagged as environment &#39;prod&#39;.</li><li><strong>Contoso-NonProduction:</strong> 54 resources in 10 resource groups across 4 regions (centralindia, eastus, uksouth and westeurope). It mainly contains managed disks (14), virtual machines (10) and network interfaces (10). Resources are tagged as environment &#39;dev&#39;.</li><li><strong>Contoso-Connectivity:</strong> 21 resources in 4 resource groups across 3 regions (eastus, global and westeurope). It mainly contains public IP addresses (6), network security groups (4) and virtual networks (2). Resources are tagged as environment &#39;shared&#39;.</li></ul>
+    
+    <div class="table-wrap env-table">
+      <table>
+        <caption>Subscription summary</caption>
+        <thead><tr><th>Subscription</th><th class="num">Resources</th><th class="num">Resource groups</th><th>Regions</th><th>Main resource types</th></tr></thead>
+        <tbody><tr><td>Contoso-Production</td><td class="num">77</td><td class="num">9</td><td>centralindia, eastus, uksouth, westeurope</td><td>Managed disks (20), Virtual machines (14), Network interfaces (14)</td></tr><tr><td>Contoso-NonProduction</td><td class="num">54</td><td class="num">10</td><td>centralindia, eastus, uksouth, westeurope</td><td>Managed disks (14), Virtual machines (10), Network interfaces (10)</td></tr><tr><td>Contoso-Connectivity</td><td class="num">21</td><td class="num">4</td><td>eastus, global, westeurope</td><td>Public IP addresses (6), Network security groups (4), Virtual networks (2)</td></tr></tbody>
+      </table>
+    </div>
+    
+    
+  </article>
+  
+  <article class="card env" id="env-regions">
+    <h3>3. Regional footprint</h3>
+    <p>Resources are deployed in 5 regions: eastus (74), westeurope (41), uksouth (27), centralindia (8) and global (2). Running in several regions gives the option of regional resilience, but only if workloads are actually designed to fail over between them.</p><p>The approved regions are eastus, westeurope and uksouth. 8 resources sit outside them, in centralindia (8).</p>
+    
+    
+    <div class="table-wrap env-table">
+      <table>
+        <caption>Resources by region</caption>
+        <thead><tr><th>Region</th><th class="num">Resources</th><th>% of estate</th><th>Main areas</th></tr></thead>
+        <tbody><tr><td>eastus</td><td class="num">74</td><td>49%</td><td>Networking (32), Compute (25), Application hosting (7)</td></tr><tr><td>westeurope</td><td class="num">41</td><td>27%</td><td>Compute (14), Networking (14), Storage (5)</td></tr><tr><td>uksouth</td><td class="num">27</td><td>18%</td><td>Compute (15), Networking (8), Databases (2)</td></tr><tr><td>centralindia</td><td class="num">8</td><td>5%</td><td>Compute (4), Storage (2), Networking (1)</td></tr><tr><td>global</td><td class="num">2</td><td>1%</td><td>Networking (2)</td></tr></tbody>
+      </table>
+    </div>
+    
+    
+    <div class="related"><span class="related-label">Related findings</span>
+      <a class="pill sev-Medium" href="#rule-GOV-002">GOV-002 · Resource outside approved regions (8)</a>
+    </div>
+    
+  </article>
+  
+  <article class="card env" id="env-compute">
+    <h3>4. Compute</h3>
+    <p>There are 24 virtual machines across 2 subscriptions and 4 regions.</p><p>By operating system, the fleet is Linux (20) and Windows (4). It uses 6 VM sizes, mostly D-series v5 (13), E-series v5 (4) and A-series v2 (3); the most common sizes are Standard_D2s_v5 (9), Standard_E8s_v5 (4) and Standard_D4s_v5 (4).</p><p>At the time of export 19 of 24 VMs (79%) were running, 1 was deallocated and 4 were stopped but still allocated, which means their compute is still being billed.</p><p>For resilience, 9 VMs are pinned to availability zones and 0 sit in availability sets; the remaining 15 have no zone or availability-set protection and depend on a single host or datacenter.</p><p>Storage for these machines is provided by 34 managed disks totalling 4,928 GB, on Premium_LRS (31) and StandardSSD_LRS (3) tiers. Disk states are Attached (24) and Unattached (10). The 10 unattached disks (1,856 GB) are not used by any VM but are still billed.</p>
+    
+    
+    <div class="table-wrap env-table">
+      <table>
+        <caption>Virtual machines by size</caption>
+        <thead><tr><th>VM size</th><th>Series</th><th class="num">Count</th></tr></thead>
+        <tbody><tr><td>Standard_D2s_v5</td><td>D-series v5</td><td class="num">9</td></tr><tr><td>Standard_E8s_v5</td><td>E-series v5</td><td class="num">4</td></tr><tr><td>Standard_D4s_v5</td><td>D-series v5</td><td class="num">4</td></tr><tr><td>Standard_A2_v2</td><td>A-series v2</td><td class="num">3</td></tr><tr><td>Standard_DS2_v2</td><td>DS-series v2</td><td class="num">2</td></tr><tr><td>Standard_B2ms</td><td>B-series</td><td class="num">2</td></tr></tbody>
+      </table>
+    </div>
+    
+    
+    <div class="related"><span class="related-label">Related findings</span>
+      <a class="pill sev-Medium" href="#rule-REL-001">REL-001 · VM has no zone or availability set (15)</a><a class="pill sev-High" href="#rule-COST-003">COST-003 · VM stopped but not deallocated (4)</a><a class="pill sev-Low" href="#rule-COST-004">COST-004 · Deallocated VM (1)</a><a class="pill sev-Medium" href="#rule-COST-001">COST-001 · Unattached managed disk (10)</a><a class="pill sev-Low" href="#rule-OPS-001">OPS-001 · Previous-generation VM size (5)</a>
+    </div>
+    
+  </article>
+  
+  <article class="card env" id="env-network">
+    <h3>5. Networking</h3>
+    <p>The network layer consists of 57 resources: Network interfaces (24), Network security groups (7), Virtual networks (6), Public IP addresses (6), Azure Firewalls (2), routetables (2), privateendpoints (2), privatednszones (2), virtualnetworkgateways (1), localnetworkgateways (1), connections (1), bastionhosts (1), Application gateways (1) and Load balancers (1).</p><p>There are 6 virtual networks in eastus, uksouth and westeurope, with 2 Azure Firewalls deployed. How these networks connect to each other (the topology) is assessed in the Architecture assessment section.</p><p>Traffic filtering uses 7 network security groups with 9 custom rules between them. Some NSGs allow RDP or SSH from the Internet (see related findings).</p><p>6 public IP addresses are allocated; 2 of them are not associated with any resource.</p>
+    
+    
+    <div class="table-wrap env-table">
+      <table>
+        <caption>Network resources</caption>
+        <thead><tr><th>Resource type</th><th class="num">Count</th><th>Regions</th></tr></thead>
+        <tbody><tr><td>Network interfaces</td><td class="num">24</td><td>centralindia, eastus, uksouth, westeurope</td></tr><tr><td>Network security groups</td><td class="num">7</td><td>eastus, westeurope</td></tr><tr><td>Virtual networks</td><td class="num">6</td><td>eastus, uksouth, westeurope</td></tr><tr><td>Public IP addresses</td><td class="num">6</td><td>eastus, westeurope</td></tr><tr><td>Azure Firewalls</td><td class="num">2</td><td>eastus, westeurope</td></tr><tr><td>routetables</td><td class="num">2</td><td>eastus, westeurope</td></tr><tr><td>privateendpoints</td><td class="num">2</td><td>eastus</td></tr><tr><td>privatednszones</td><td class="num">2</td><td>global</td></tr><tr><td>virtualnetworkgateways</td><td class="num">1</td><td>eastus</td></tr><tr><td>localnetworkgateways</td><td class="num">1</td><td>eastus</td></tr><tr><td>connections</td><td class="num">1</td><td>eastus</td></tr><tr><td>bastionhosts</td><td class="num">1</td><td>eastus</td></tr><tr><td>Application gateways</td><td class="num">1</td><td>eastus</td></tr><tr><td>Load balancers</td><td class="num">1</td><td>eastus</td></tr></tbody>
+      </table>
+    </div>
+    
+    
+    <div class="related"><span class="related-label">Related findings</span>
+      <a class="pill sev-High" href="#rule-SEC-007">SEC-007 · NSG exposes management ports to the Internet (2)</a><a class="pill sev-Low" href="#rule-COST-002">COST-002 · Unassociated public IP address (2)</a>
+    </div>
+    
+  </article>
+  
+  <article class="card env" id="env-storage">
+    <h3>6. Storage</h3>
+    <p>There are 10 storage accounts, all of kind StorageV2. Replication is GRS for 4, LRS for 3 and ZRS for 3. LRS keeps copies within one datacenter only; ZRS spreads them across zones and GRS/GZRS add a copy in a paired region.</p><p>On security settings, 6 of 10 accounts require HTTPS, 8 enforce TLS 1.2 or later, 4 allow anonymous blob access, and 10 accept traffic from public networks.</p>
+    
+    
+    <div class="table-wrap env-table">
+      <table>
+        <caption>Storage accounts</caption>
+        <thead><tr><th>Account</th><th>Subscription</th><th>Replication</th><th>HTTPS only</th><th>Min TLS</th><th>Anonymous blob access</th></tr></thead>
+        <tbody><tr><td>stdevdata00</td><td>Contoso-NonProduction</td><td>Standard_GRS</td><td>Yes</td><td>TLS1_2</td><td>Allowed</td></tr><tr><td>stdevdata01</td><td>Contoso-NonProduction</td><td>Standard_GRS</td><td>No</td><td>TLS1_2</td><td>Allowed</td></tr><tr><td>stdevdata02</td><td>Contoso-NonProduction</td><td>Standard_LRS</td><td>Yes</td><td>TLS1_0</td><td>Blocked</td></tr><tr><td>stdevdata03</td><td>Contoso-NonProduction</td><td>Standard_ZRS</td><td>No</td><td>TLS1_2</td><td>Blocked</td></tr><tr><td>stdevdata04</td><td>Contoso-NonProduction</td><td>Standard_GRS</td><td>Yes</td><td>TLS1_0</td><td>Blocked</td></tr><tr><td>stprddata00</td><td>Contoso-Production</td><td>Standard_LRS</td><td>Yes</td><td>TLS1_2</td><td>Blocked</td></tr><tr><td>stprddata01</td><td>Contoso-Production</td><td>Standard_GRS</td><td>Yes</td><td>TLS1_2</td><td>Blocked</td></tr><tr><td>stprddata02</td><td>Contoso-Production</td><td>Standard_ZRS</td><td>Yes</td><td>TLS1_2</td><td>Allowed</td></tr><tr><td>stprddata03</td><td>Contoso-Production</td><td>Standard_ZRS</td><td>No</td><td>TLS1_2</td><td>Blocked</td></tr><tr><td>stprddata04</td><td>Contoso-Production</td><td>Standard_LRS</td><td>No</td><td>TLS1_2</td><td>Allowed</td></tr></tbody>
+      </table>
+    </div>
+    
+    
+    <div class="related"><span class="related-label">Related findings</span>
+      <a class="pill sev-High" href="#rule-SEC-001">SEC-001 · Storage account permits HTTP (4)</a><a class="pill sev-High" href="#rule-SEC-002">SEC-002 · Storage account allows anonymous blob access (4)</a><a class="pill sev-Medium" href="#rule-SEC-003">SEC-003 · Storage account accepts TLS &lt; 1.2 (2)</a><a class="pill sev-Low" href="#rule-REL-003">REL-003 · Storage account uses locally redundant replication (3)</a>
+    </div>
+    
+  </article>
+  
+  <article class="card env" id="env-data">
+    <h3>7. Databases</h3>
+    <p>Azure SQL is used with 2 logical servers hosting 6 databases on the S1 (3), Basic (2) and GP_Gen5_2 (1) service tiers.</p><p>Public network access is enabled on sql-dev-01; 1 of 6 databases is zone redundant.</p>
+    
+    
+    
+    <div class="related"><span class="related-label">Related findings</span>
+      <a class="pill sev-Medium" href="#rule-SEC-005">SEC-005 · SQL server reachable from public networks (1)</a><a class="pill sev-Low" href="#rule-REL-004">REL-004 · SQL database not zone redundant (3)</a>
+    </div>
+    
+  </article>
+  
+  <article class="card env" id="env-web">
+    <h3>8. Application hosting</h3>
+    <p>Web workloads run on Azure App Service: 8 apps hosted on 4 App Service plans (P1v3 (2), S1 (1) and B1 (1) pricing tiers).</p><p>6 of 8 apps enforce HTTPS-only access. The plan(s) asp-dev-00 and asp-dev-01 host no apps but still incur charges.</p>
+    
+    
+    
+    <div class="related"><span class="related-label">Related findings</span>
+      <a class="pill sev-High" href="#rule-SEC-006">SEC-006 · Web app does not enforce HTTPS (2)</a><a class="pill sev-Medium" href="#rule-COST-005">COST-005 · Empty App Service plan (2)</a>
+    </div>
+    
+  </article>
+  
+  <article class="card env" id="env-security">
+    <h3>9. Security services</h3>
+    <p>Secrets, keys and certificates are held in 4 Key Vaults (kv-dev-00, kv-dev-01, kv-prd-00 and kv-prd-01).</p><p>3 of 4 vaults have purge protection enabled, which prevents deleted secrets from being permanently removed during the retention period.</p><p>Network perimeter protection is provided by 2 Azure Firewalls in eastus and westeurope.</p>
+    
+    
+    
+    <div class="related"><span class="related-label">Related findings</span>
+      <a class="pill sev-Medium" href="#rule-SEC-004">SEC-004 · Key Vault purge protection disabled (1)</a>
+    </div>
+    
+  </article>
+  
+  <article class="card env" id="env-monitoring">
+    <h3>10. Monitoring and management</h3>
+    <p>Logs are collected in 2 Log Analytics workspaces (log-dev-01 and log-prd-01).</p><p>Log retention is 30 days on 2 workspaces.</p><p>No Recovery Services vault was found, so there is no evidence of Azure Backup protecting the virtual machines or databases.</p>
+    
+    
+    
+    <div class="related"><span class="related-label">Related findings</span>
+      <a class="pill sev-Low" href="#rule-OPS-002">OPS-002 · Log Analytics retention below target (2)</a>
+    </div>
+    
+  </article>
+  
+  <article class="card env" id="env-governance">
+    <h3>11. Governance and tagging</h3>
+    <p>135 of 152 resources (89%) carry at least one tag, and 78% carry all of the required tags (environment, owner and costCenter).</p><p>In total 3 distinct tag keys are in use, most often costCenter (126), environment (125) and owner (125).</p><p>1 resource still uses the classic (Azure Service Manager) deployment model (legacy-cloudservice). This model is retired, so it needs migrating to Azure Resource Manager.</p>
+    
+    
+    <div class="table-wrap env-table">
+      <table>
+        <caption>Required tag coverage</caption>
+        <thead><tr><th>Tag</th><th class="num">Resources tagged</th><th>Coverage</th><th>Most common values</th></tr></thead>
+        <tbody><tr><td>environment</td><td class="num">125</td><td>82%</td><td>prod (63), dev (44), shared (18)</td></tr><tr><td>owner</td><td class="num">125</td><td>82%</td><td>app-team (44), platform (44), data-team (37)</td></tr><tr><td>costCenter</td><td class="num">126</td><td>83%</td><td>CC300 (43), CC200 (42), CC100 (41)</td></tr></tbody>
+      </table>
+    </div>
+    
+    
+    <div class="related"><span class="related-label">Related findings</span>
+      <a class="pill sev-Medium" href="#rule-GOV-001">GOV-001 · Required tags missing (34)</a><a class="pill sev-Medium" href="#rule-GOV-002">GOV-002 · Resource outside approved regions (8)</a><a class="pill sev-High" href="#rule-GOV-003">GOV-003 · Classic (ASM) resource in use (1)</a>
+    </div>
+    
+  </article>
+  
+</section>
+
+<section id="inventory">
+  <h2>Inventory overview</h2>
+  <div class="grid two">
+    
+    <div class="card"><h3 style="margin-top:0">Top resource types</h3>
+      <ul class="bars">
+        <li title="Managed disks: 34"><span class="lbl">Managed disks</span><span class="track"><span class="fill" style="display:block;width:100.0%"></span></span><span class="val">34</span></li>
+      
+        <li title="Virtual machines: 24"><span class="lbl">Virtual machines</span><span class="track"><span class="fill" style="display:block;width:70.6%"></span></span><span class="val">24</span></li>
+      
+        <li title="Network interfaces: 24"><span class="lbl">Network interfaces</span><span class="track"><span class="fill" style="display:block;width:70.6%"></span></span><span class="val">24</span></li>
+      
+        <li title="Storage accounts: 10"><span class="lbl">Storage accounts</span><span class="track"><span class="fill" style="display:block;width:29.4%"></span></span><span class="val">10</span></li>
+      
+        <li title="App Services: 8"><span class="lbl">App Services</span><span class="track"><span class="fill" style="display:block;width:23.5%"></span></span><span class="val">8</span></li>
+      
+        <li title="Network security groups: 7"><span class="lbl">Network security groups</span><span class="track"><span class="fill" style="display:block;width:20.6%"></span></span><span class="val">7</span></li>
+      
+        <li title="SQL databases: 6"><span class="lbl">SQL databases</span><span class="track"><span class="fill" style="display:block;width:17.6%"></span></span><span class="val">6</span></li>
+      
+        <li title="Virtual networks: 6"><span class="lbl">Virtual networks</span><span class="track"><span class="fill" style="display:block;width:17.6%"></span></span><span class="val">6</span></li>
+      
+        <li title="Public IP addresses: 6"><span class="lbl">Public IP addresses</span><span class="track"><span class="fill" style="display:block;width:17.6%"></span></span><span class="val">6</span></li>
+      
+        <li title="Key vaults: 4"><span class="lbl">Key vaults</span><span class="track"><span class="fill" style="display:block;width:11.8%"></span></span><span class="val">4</span></li>
+      
+        <li title="App Service plans: 4"><span class="lbl">App Service plans</span><span class="track"><span class="fill" style="display:block;width:11.8%"></span></span><span class="val">4</span></li>
+      
+        <li title="SQL servers: 2"><span class="lbl">SQL servers</span><span class="track"><span class="fill" style="display:block;width:5.9%"></span></span><span class="val">2</span></li>
+      </ul>
+    </div>
+    
+    <div class="card"><h3 style="margin-top:0">Resources by region</h3>
+      <ul class="bars">
+        <li title="eastus: 74"><span class="lbl">eastus</span><span class="track"><span class="fill" style="display:block;width:100.0%"></span></span><span class="val">74</span></li>
+      
+        <li title="westeurope: 41"><span class="lbl">westeurope</span><span class="track"><span class="fill" style="display:block;width:55.4%"></span></span><span class="val">41</span></li>
+      
+        <li title="uksouth: 27"><span class="lbl">uksouth</span><span class="track"><span class="fill" style="display:block;width:36.5%"></span></span><span class="val">27</span></li>
+      
+        <li title="centralindia: 8"><span class="lbl">centralindia</span><span class="track"><span class="fill" style="display:block;width:10.8%"></span></span><span class="val">8</span></li>
+      
+        <li title="global: 2"><span class="lbl">global</span><span class="track"><span class="fill" style="display:block;width:2.7%"></span></span><span class="val">2</span></li>
+      </ul>
+    </div>
+    
+    <div class="card"><h3 style="margin-top:0">Resources by subscription</h3>
+      <ul class="bars">
+        <li title="Contoso-Production: 77"><span class="lbl">Contoso-Production</span><span class="track"><span class="fill" style="display:block;width:100.0%"></span></span><span class="val">77</span></li>
+      
+        <li title="Contoso-NonProduction: 54"><span class="lbl">Contoso-NonProduction</span><span class="track"><span class="fill" style="display:block;width:70.1%"></span></span><span class="val">54</span></li>
+      
+        <li title="Contoso-Connectivity: 21"><span class="lbl">Contoso-Connectivity</span><span class="track"><span class="fill" style="display:block;width:27.3%"></span></span><span class="val">21</span></li>
+      </ul>
+    </div>
+    
+  </div>
+</section>
+
+<section id="scorecard">
+  <h2>Scorecard</h2>
+  <div class="card table-wrap">
+    <table>
+      <thead><tr><th>Pillar</th><th class="num">Score</th><th>Rating</th><th class="num">Checks</th><th class="num">High</th><th class="num">Medium</th><th class="num">Low</th></tr></thead>
+      <tbody>
+        <tr><td>Security</td><td class="num"><strong>68</strong></td>
+          <td><span class="pill r-Fair">Fair</span></td><td class="num">51</td>
+          <td class="num">12</td><td class="num">4</td><td class="num">0</td></tr>
+      
+        <tr><td>Reliability</td><td class="num"><strong>75</strong></td>
+          <td><span class="pill r-Fair">Fair</span></td><td class="num">64</td>
+          <td class="num">0</td><td class="num">15</td><td class="num">6</td></tr>
+      
+        <tr><td>Cost Optimization</td><td class="num"><strong>78</strong></td>
+          <td><span class="pill r-Fair">Fair</span></td><td class="num">92</td>
+          <td class="num">4</td><td class="num">12</td><td class="num">3</td></tr>
+      
+        <tr><td>Operational Excellence</td><td class="num"><strong>73</strong></td>
+          <td><span class="pill r-Fair">Fair</span></td><td class="num">26</td>
+          <td class="num">0</td><td class="num">0</td><td class="num">7</td></tr>
+      
+        <tr><td>Governance</td><td class="num"><strong>86</strong></td>
+          <td><span class="pill r-Good">Good</span></td><td class="num">305</td>
+          <td class="num">1</td><td class="num">42</td><td class="num">0</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="findings">
+  <h2>Findings by pillar</h2>
+  
+    
+    <h3>Security</h3>
+    
+    
+    
+    <div class="rule High" id="rule-SEC-001">
+      <div><strong>SEC-001 · Storage account permits HTTP</strong> <span class="pill sev-High">High</span></div>
+      <div class="meta">4 of 10 evaluated resources · e.g. stdevdata01, stdevdata03, stprddata03, stprddata04</div>
+      <div><strong>Recommendation:</strong> Enable &#39;Secure transfer required&#39; on the storage account.</div>
+      <div class="meta">Context: <a href="#env-storage">6. Storage</a> in the infrastructure overview</div>
+    </div>
+    
+    <div class="rule High" id="rule-SEC-002">
+      <div><strong>SEC-002 · Storage account allows anonymous blob access</strong> <span class="pill sev-High">High</span></div>
+      <div class="meta">4 of 10 evaluated resources · e.g. stdevdata00, stdevdata01, stprddata02, stprddata04</div>
+      <div><strong>Recommendation:</strong> Set allowBlobPublicAccess to false and use SAS or Entra ID for access.</div>
+      <div class="meta">Context: <a href="#env-storage">6. Storage</a> in the infrastructure overview</div>
+    </div>
+    
+    <div class="rule High" id="rule-SEC-006">
+      <div><strong>SEC-006 · Web app does not enforce HTTPS</strong> <span class="pill sev-High">High</span></div>
+      <div class="meta">2 of 8 evaluated resources · e.g. app-dev-01, app-dev-02</div>
+      <div><strong>Recommendation:</strong> Enable &#39;HTTPS Only&#39; on the App Service.</div>
+      <div class="meta">Context: <a href="#env-web">8. Application hosting</a> in the infrastructure overview</div>
+    </div>
+    
+    <div class="rule High" id="rule-SEC-007">
+      <div><strong>SEC-007 · NSG exposes management ports to the Internet</strong> <span class="pill sev-High">High</span></div>
+      <div class="meta">2 of 7 evaluated resources · e.g. nsg-mgmt-eastus, nsg-mgmt-westeurope</div>
+      <div><strong>Recommendation:</strong> Remove Internet-sourced RDP/SSH rules; use Azure Bastion or Just-in-Time VM access.</div>
+      <div class="meta">Context: <a href="#env-network">5. Networking</a> in the infrastructure overview</div>
+    </div>
+    
+    <div class="rule Medium" id="rule-SEC-003">
+      <div><strong>SEC-003 · Storage account accepts TLS &lt; 1.2</strong> <span class="pill sev-Medium">Medium</span></div>
+      <div class="meta">2 of 10 evaluated resources · e.g. stdevdata02, stdevdata04</div>
+      <div><strong>Recommendation:</strong> Set minimum TLS version to 1.2.</div>
+      <div class="meta">Context: <a href="#env-storage">6. Storage</a> in the infrastructure overview</div>
+    </div>
+    
+    <div class="rule Medium" id="rule-SEC-004">
+      <div><strong>SEC-004 · Key Vault purge protection disabled</strong> <span class="pill sev-Medium">Medium</span></div>
+      <div class="meta">1 of 4 evaluated resources · e.g. kv-dev-00</div>
+      <div><strong>Recommendation:</strong> Enable purge protection to guard secrets and keys against malicious or accidental deletion.</div>
+      <div class="meta">Context: <a href="#env-security">9. Security services</a> in the infrastructure overview</div>
+    </div>
+    
+    <div class="rule Medium" id="rule-SEC-005">
+      <div><strong>SEC-005 · SQL server reachable from public networks</strong> <span class="pill sev-Medium">Medium</span></div>
+      <div class="meta">1 of 2 evaluated resources · e.g. sql-dev-01</div>
+      <div><strong>Recommendation:</strong> Disable public network access and connect through Private Endpoints.</div>
+      <div class="meta">Context: <a href="#env-data">7. Databases</a> in the infrastructure overview</div>
+    </div>
+    
+  
+    
+    <h3>Reliability</h3>
+    
+    
+    
+    <div class="rule Medium" id="rule-REL-001">
+      <div><strong>REL-001 · VM has no zone or availability set</strong> <span class="pill sev-Medium">Medium</span></div>
+      <div class="meta">15 of 24 evaluated resources · e.g. vm-dev-000, vm-dev-001, vm-dev-002, vm-dev-003, vm-dev-004 …</div>
+      <div><strong>Recommendation:</strong> Deploy production VMs across availability zones or in a scale set / availability set.</div>
+      <div class="meta">Context: <a href="#env-compute">4. Compute</a> in the infrastructure overview</div>
+    </div>
+    
+    <div class="rule Low" id="rule-REL-003">
+      <div><strong>REL-003 · Storage account uses locally redundant replication</strong> <span class="pill sev-Low">Low</span></div>
+      <div class="meta">3 of 10 evaluated resources · e.g. stdevdata02, stprddata00, stprddata04</div>
+      <div><strong>Recommendation:</strong> Use ZRS/GZRS for production data that needs zone or regional resilience.</div>
+      <div class="meta">Context: <a href="#env-storage">6. Storage</a> in the infrastructure overview</div>
+    </div>
+    
+    <div class="rule Low" id="rule-REL-004">
+      <div><strong>REL-004 · SQL database not zone redundant</strong> <span class="pill sev-Low">Low</span></div>
+      <div class="meta">3 of 6 evaluated resources · e.g. sql-dev-01/db1, sql-dev-01/db2, sql-prd-01/db1</div>
+      <div><strong>Recommendation:</strong> Enable zone redundancy on business-critical databases.</div>
+      <div class="meta">Context: <a href="#env-data">7. Databases</a> in the infrastructure overview</div>
+    </div>
+    
+  
+    
+    <h3>Cost Optimization</h3>
+    
+    
+    
+    <div class="rule High" id="rule-COST-003">
+      <div><strong>COST-003 · VM stopped but not deallocated</strong> <span class="pill sev-High">High</span></div>
+      <div class="meta">4 of 24 evaluated resources · e.g. vm-dev-006, vm-dev-009, vm-prd-000, vm-prd-001</div>
+      <div><strong>Recommendation:</strong> Deallocate stopped VMs (Stop from the portal/CLI) or schedule auto-shutdown.</div>
+      <div class="meta">Context: <a href="#env-compute">4. Compute</a> in the infrastructure overview</div>
+    </div>
+    
+    <div class="rule Medium" id="rule-COST-001">
+      <div><strong>COST-001 · Unattached managed disk</strong> <span class="pill sev-Medium">Medium</span></div>
+      <div class="meta">10 of 34 evaluated resources · e.g. disk-dev-orphan-0, disk-dev-orphan-1, disk-dev-orphan-2, disk-dev-orphan-3, disk-prd-orphan-0 …</div>
+      <div><strong>Recommendation:</strong> Snapshot if required, then delete orphaned disks.</div>
+      <div class="meta">Context: <a href="#env-compute">4. Compute</a> in the infrastructure overview</div>
+    </div>
+    
+    <div class="rule Medium" id="rule-COST-005">
+      <div><strong>COST-005 · Empty App Service plan</strong> <span class="pill sev-Medium">Medium</span></div>
+      <div class="meta">2 of 4 evaluated resources · e.g. asp-dev-00, asp-dev-01</div>
+      <div><strong>Recommendation:</strong> Delete or consolidate App Service plans with no apps.</div>
+      <div class="meta">Context: <a href="#env-web">8. Application hosting</a> in the infrastructure overview</div>
+    </div>
+    
+    <div class="rule Low" id="rule-COST-002">
+      <div><strong>COST-002 · Unassociated public IP address</strong> <span class="pill sev-Low">Low</span></div>
+      <div class="meta">2 of 6 evaluated resources · e.g. pip-eastus-0, pip-westeurope-0</div>
+      <div><strong>Recommendation:</strong> Release public IPs that are not attached to any resource.</div>
+      <div class="meta">Context: <a href="#env-network">5. Networking</a> in the infrastructure overview</div>
+    </div>
+    
+    <div class="rule Low" id="rule-COST-004">
+      <div><strong>COST-004 · Deallocated VM</strong> <span class="pill sev-Low">Low</span></div>
+      <div class="meta">1 of 24 evaluated resources · e.g. vm-prd-008</div>
+      <div><strong>Recommendation:</strong> Confirm the VM is still needed; delete it and its disks if not.</div>
+      <div class="meta">Context: <a href="#env-compute">4. Compute</a> in the infrastructure overview</div>
+    </div>
+    
+  
+    
+    <h3>Operational Excellence</h3>
+    
+    
+    
+    <div class="rule Low" id="rule-OPS-001">
+      <div><strong>OPS-001 · Previous-generation VM size</strong> <span class="pill sev-Low">Low</span></div>
+      <div class="meta">5 of 24 evaluated resources · e.g. vm-dev-006, vm-prd-001, vm-prd-002, vm-prd-004, vm-prd-008</div>
+      <div><strong>Recommendation:</strong> Resize to current generation (v5/v6) SKUs for better price-performance.</div>
+      <div class="meta">Context: <a href="#env-compute">4. Compute</a> in the infrastructure overview</div>
+    </div>
+    
+    <div class="rule Low" id="rule-OPS-002">
+      <div><strong>OPS-002 · Log Analytics retention below target</strong> <span class="pill sev-Low">Low</span></div>
+      <div class="meta">2 of 2 evaluated resources · e.g. log-dev-01, log-prd-01</div>
+      <div><strong>Recommendation:</strong> Increase retention or archive to meet audit and investigation requirements.</div>
+      <div class="meta">Context: <a href="#env-monitoring">10. Monitoring and management</a> in the infrastructure overview</div>
+    </div>
+    
+  
+    
+    <h3>Governance</h3>
+    
+    
+    
+    <div class="rule High" id="rule-GOV-003">
+      <div><strong>GOV-003 · Classic (ASM) resource in use</strong> <span class="pill sev-High">High</span></div>
+      <div class="meta">1 of 1 evaluated resources · e.g. legacy-cloudservice</div>
+      <div><strong>Recommendation:</strong> Migrate classic resources to Azure Resource Manager before platform retirement.</div>
+      <div class="meta">Context: <a href="#env-governance">11. Governance and tagging</a> in the infrastructure overview</div>
+    </div>
+    
+    <div class="rule Medium" id="rule-GOV-001">
+      <div><strong>GOV-001 · Required tags missing</strong> <span class="pill sev-Medium">Medium</span></div>
+      <div class="meta">34 of 152 evaluated resources · e.g. app-prd-01, asp-dev-00, asp-dev-01, disk-dev-orphan-0, disk-prd-orphan-3 …</div>
+      <div><strong>Recommendation:</strong> Enforce the tagging standard with Azure Policy (Require/Inherit a tag) and back-fill existing resources.</div>
+      <div class="meta">Context: <a href="#env-governance">11. Governance and tagging</a> in the infrastructure overview</div>
+    </div>
+    
+    <div class="rule Medium" id="rule-GOV-002">
+      <div><strong>GOV-002 · Resource outside approved regions</strong> <span class="pill sev-Medium">Medium</span></div>
+      <div class="meta">8 of 152 evaluated resources · e.g. disk-dev-orphan-2, disk-prd-orphan-3, nic-prd-012, sql-prd-01, stprddata00 …</div>
+      <div><strong>Recommendation:</strong> Apply the &#39;Allowed locations&#39; policy and plan migration of out-of-policy resources.</div>
+      <div class="meta">Context: <a href="#env-regions">3. Regional footprint</a> in the infrastructure overview</div>
+    </div>
+    
+  
+</section>
+
+<section id="roadmap">
+  <h2>Remediation roadmap</h2>
+  <div class="grid phases">
+    
+    <div class="card phase"><h3>0-30 days (quick wins &amp; critical risk)</h3>
+      <ul><li>Storage account permits HTTP <span class="muted">(4)</span></li><li>Storage account allows anonymous blob access <span class="muted">(4)</span></li><li>VM stopped but not deallocated <span class="muted">(4)</span></li><li>Web app does not enforce HTTPS <span class="muted">(2)</span></li><li>NSG exposes management ports to the Internet <span class="muted">(2)</span></li><li>Classic (ASM) resource in use <span class="muted">(1)</span></li><li>Unattached managed disk <span class="muted">(10)</span></li><li>Empty App Service plan <span class="muted">(2)</span></li><li>Unassociated public IP address <span class="muted">(2)</span></li><li>Deallocated VM <span class="muted">(1)</span></li></ul>
+      
+    </div>
+    
+    <div class="card phase"><h3>30-60 days</h3>
+      <ul><li>Required tags missing <span class="muted">(34)</span></li><li>VM has no zone or availability set <span class="muted">(15)</span></li><li>Resource outside approved regions <span class="muted">(8)</span></li><li>Storage account accepts TLS &lt; 1.2 <span class="muted">(2)</span></li><li>Key Vault purge protection disabled <span class="muted">(1)</span></li><li>SQL server reachable from public networks <span class="muted">(1)</span></li></ul>
+      
+    </div>
+    
+    <div class="card phase"><h3>60-90 days</h3>
+      <ul><li>Previous-generation VM size <span class="muted">(5)</span></li><li>Storage account uses locally redundant replication <span class="muted">(3)</span></li><li>SQL database not zone redundant <span class="muted">(3)</span></li><li>Log Analytics retention below target <span class="muted">(2)</span></li></ul>
+      
+    </div>
+    
+  </div>
+</section>
+
+<section id="details">
+  <h2>Detailed findings <span class="muted" style="font-size:15px">(106)</span></h2>
+  <div class="filters" data-for="findings-table">
+    <input type="search" placeholder="Search findings…" aria-label="Search findings">
+    <select data-col="1" aria-label="Severity"><option value="">All severities</option><option>High</option><option>Medium</option><option>Low</option></select>
+    <select data-col="2" aria-label="Pillar"><option value="">All pillars</option><option>Security</option><option>Reliability</option><option>Cost Optimization</option><option>Operational Excellence</option><option>Governance</option></select>
+  </div>
+  <div class="card table-wrap" style="padding:0;max-height:640px;overflow:auto">
+    <table id="findings-table" class="sortable">
+      <thead><tr><th>Rule</th><th>Severity</th><th>Pillar</th><th>Resource</th><th>Type</th><th>Resource group</th><th>Subscription</th><th>Detail</th></tr></thead>
+      <tbody>
+        <tr><td>COST-003</td><td><span class="pill sev-High">High</span></td><td>Cost Optimization</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app03/providers/Microsoft.Compute/virtualMachines/vm-dev-006">vm-dev-006</td><td>Virtual machines</td><td>rg-dev-app03</td>
+          <td>Contoso-NonProduction</td><td>VM is stopped but still allocated (compute is billed)</td></tr>
+      
+        <tr><td>COST-003</td><td><span class="pill sev-High">High</span></td><td>Cost Optimization</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app02/providers/Microsoft.Compute/virtualMachines/vm-dev-009">vm-dev-009</td><td>Virtual machines</td><td>rg-dev-app02</td>
+          <td>Contoso-NonProduction</td><td>VM is stopped but still allocated (compute is billed)</td></tr>
+      
+        <tr><td>COST-003</td><td><span class="pill sev-High">High</span></td><td>Cost Optimization</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app01/providers/Microsoft.Compute/virtualMachines/vm-prd-000">vm-prd-000</td><td>Virtual machines</td><td>rg-prd-app01</td>
+          <td>Contoso-Production</td><td>VM is stopped but still allocated (compute is billed)</td></tr>
+      
+        <tr><td>COST-003</td><td><span class="pill sev-High">High</span></td><td>Cost Optimization</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app02/providers/Microsoft.Compute/virtualMachines/vm-prd-001">vm-prd-001</td><td>Virtual machines</td><td>rg-prd-app02</td>
+          <td>Contoso-Production</td><td>VM is stopped but still allocated (compute is billed)</td></tr>
+      
+        <tr><td>GOV-003</td><td><span class="pill sev-High">High</span></td><td>Governance</td>
+          <td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-legacy/providers/Microsoft.ClassicCompute/domainNames/legacy-cloudservice">legacy-cloudservice</td><td>Classic cloud services</td><td>rg-legacy</td>
+          <td>Contoso-Connectivity</td><td>Classic (ASM) deployment model resource</td></tr>
+      
+        <tr><td>SEC-001</td><td><span class="pill sev-High">High</span></td><td>Security</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-data/providers/Microsoft.Storage/storageAccounts/stdevdata01">stdevdata01</td><td>Storage accounts</td><td>rg-dev-data</td>
+          <td>Contoso-NonProduction</td><td>HTTP traffic is permitted</td></tr>
+      
+        <tr><td>SEC-001</td><td><span class="pill sev-High">High</span></td><td>Security</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-data/providers/Microsoft.Storage/storageAccounts/stdevdata03">stdevdata03</td><td>Storage accounts</td><td>rg-dev-data</td>
+          <td>Contoso-NonProduction</td><td>HTTP traffic is permitted</td></tr>
+      
+        <tr><td>SEC-001</td><td><span class="pill sev-High">High</span></td><td>Security</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-data/providers/Microsoft.Storage/storageAccounts/stprddata03">stprddata03</td><td>Storage accounts</td><td>rg-prd-data</td>
+          <td>Contoso-Production</td><td>HTTP traffic is permitted</td></tr>
+      
+        <tr><td>SEC-001</td><td><span class="pill sev-High">High</span></td><td>Security</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-data/providers/Microsoft.Storage/storageAccounts/stprddata04">stprddata04</td><td>Storage accounts</td><td>rg-prd-data</td>
+          <td>Contoso-Production</td><td>HTTP traffic is permitted</td></tr>
+      
+        <tr><td>SEC-002</td><td><span class="pill sev-High">High</span></td><td>Security</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-data/providers/Microsoft.Storage/storageAccounts/stdevdata00">stdevdata00</td><td>Storage accounts</td><td>rg-dev-data</td>
+          <td>Contoso-NonProduction</td><td>Anonymous blob access is allowed</td></tr>
+      
+        <tr><td>SEC-002</td><td><span class="pill sev-High">High</span></td><td>Security</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-data/providers/Microsoft.Storage/storageAccounts/stdevdata01">stdevdata01</td><td>Storage accounts</td><td>rg-dev-data</td>
+          <td>Contoso-NonProduction</td><td>Anonymous blob access is allowed</td></tr>
+      
+        <tr><td>SEC-002</td><td><span class="pill sev-High">High</span></td><td>Security</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-data/providers/Microsoft.Storage/storageAccounts/stprddata02">stprddata02</td><td>Storage accounts</td><td>rg-prd-data</td>
+          <td>Contoso-Production</td><td>Anonymous blob access is allowed</td></tr>
+      
+        <tr><td>SEC-002</td><td><span class="pill sev-High">High</span></td><td>Security</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-data/providers/Microsoft.Storage/storageAccounts/stprddata04">stprddata04</td><td>Storage accounts</td><td>rg-prd-data</td>
+          <td>Contoso-Production</td><td>Anonymous blob access is allowed</td></tr>
+      
+        <tr><td>SEC-006</td><td><span class="pill sev-High">High</span></td><td>Security</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-web/providers/Microsoft.Web/sites/app-dev-01">app-dev-01</td><td>App Services</td><td>rg-dev-web</td>
+          <td>Contoso-NonProduction</td><td>HTTPS-only is not enforced</td></tr>
+      
+        <tr><td>SEC-006</td><td><span class="pill sev-High">High</span></td><td>Security</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-web/providers/Microsoft.Web/sites/app-dev-02">app-dev-02</td><td>App Services</td><td>rg-dev-web</td>
+          <td>Contoso-NonProduction</td><td>HTTPS-only is not enforced</td></tr>
+      
+        <tr><td>SEC-007</td><td><span class="pill sev-High">High</span></td><td>Security</td>
+          <td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-hub-eastus/providers/Microsoft.Network/networkSecurityGroups/nsg-mgmt-eastus">nsg-mgmt-eastus</td><td>Network security groups</td><td>rg-hub-eastus</td>
+          <td>Contoso-Connectivity</td><td>Internet-exposed management ports: allow-rdp (3389)</td></tr>
+      
+        <tr><td>SEC-007</td><td><span class="pill sev-High">High</span></td><td>Security</td>
+          <td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-hub-westeurope/providers/Microsoft.Network/networkSecurityGroups/nsg-mgmt-westeurope">nsg-mgmt-westeurope</td><td>Network security groups</td><td>rg-hub-westeurope</td>
+          <td>Contoso-Connectivity</td><td>Internet-exposed management ports: allow-rdp (3389)</td></tr>
+      
+        <tr><td>COST-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Cost Optimization</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app01/providers/Microsoft.Compute/disks/disk-dev-orphan-0">disk-dev-orphan-0</td><td>Managed disks</td><td>rg-dev-app01</td>
+          <td>Contoso-NonProduction</td><td>Unattached Premium_LRS disk, 128 GB</td></tr>
+      
+        <tr><td>COST-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Cost Optimization</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app01/providers/Microsoft.Compute/disks/disk-dev-orphan-1">disk-dev-orphan-1</td><td>Managed disks</td><td>rg-dev-app01</td>
+          <td>Contoso-NonProduction</td><td>Unattached Premium_LRS disk, 64 GB</td></tr>
+      
+        <tr><td>COST-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Cost Optimization</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app01/providers/Microsoft.Compute/disks/disk-dev-orphan-2">disk-dev-orphan-2</td><td>Managed disks</td><td>rg-dev-app01</td>
+          <td>Contoso-NonProduction</td><td>Unattached StandardSSD_LRS disk, 64 GB</td></tr>
+      
+        <tr><td>COST-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Cost Optimization</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app01/providers/Microsoft.Compute/disks/disk-dev-orphan-3">disk-dev-orphan-3</td><td>Managed disks</td><td>rg-dev-app01</td>
+          <td>Contoso-NonProduction</td><td>Unattached Premium_LRS disk, 64 GB</td></tr>
+      
+        <tr><td>COST-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Cost Optimization</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app01/providers/Microsoft.Compute/disks/disk-prd-orphan-0">disk-prd-orphan-0</td><td>Managed disks</td><td>rg-prd-app01</td>
+          <td>Contoso-Production</td><td>Unattached StandardSSD_LRS disk, 64 GB</td></tr>
+      
+        <tr><td>COST-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Cost Optimization</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app01/providers/Microsoft.Compute/disks/disk-prd-orphan-1">disk-prd-orphan-1</td><td>Managed disks</td><td>rg-prd-app01</td>
+          <td>Contoso-Production</td><td>Unattached Premium_LRS disk, 512 GB</td></tr>
+      
+        <tr><td>COST-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Cost Optimization</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app01/providers/Microsoft.Compute/disks/disk-prd-orphan-2">disk-prd-orphan-2</td><td>Managed disks</td><td>rg-prd-app01</td>
+          <td>Contoso-Production</td><td>Unattached Premium_LRS disk, 512 GB</td></tr>
+      
+        <tr><td>COST-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Cost Optimization</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app01/providers/Microsoft.Compute/disks/disk-prd-orphan-3">disk-prd-orphan-3</td><td>Managed disks</td><td>rg-prd-app01</td>
+          <td>Contoso-Production</td><td>Unattached Premium_LRS disk, 128 GB</td></tr>
+      
+        <tr><td>COST-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Cost Optimization</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app01/providers/Microsoft.Compute/disks/disk-prd-orphan-4">disk-prd-orphan-4</td><td>Managed disks</td><td>rg-prd-app01</td>
+          <td>Contoso-Production</td><td>Unattached StandardSSD_LRS disk, 256 GB</td></tr>
+      
+        <tr><td>COST-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Cost Optimization</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app01/providers/Microsoft.Compute/disks/disk-prd-orphan-5">disk-prd-orphan-5</td><td>Managed disks</td><td>rg-prd-app01</td>
+          <td>Contoso-Production</td><td>Unattached Premium_LRS disk, 64 GB</td></tr>
+      
+        <tr><td>COST-005</td><td><span class="pill sev-Medium">Medium</span></td><td>Cost Optimization</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-web/providers/Microsoft.Web/serverFarms/asp-dev-00">asp-dev-00</td><td>App Service plans</td><td>rg-dev-web</td>
+          <td>Contoso-NonProduction</td><td>App Service plan hosts no apps</td></tr>
+      
+        <tr><td>COST-005</td><td><span class="pill sev-Medium">Medium</span></td><td>Cost Optimization</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-web/providers/Microsoft.Web/serverFarms/asp-dev-01">asp-dev-01</td><td>App Service plans</td><td>rg-dev-web</td>
+          <td>Contoso-NonProduction</td><td>App Service plan hosts no apps</td></tr>
+      
+        <tr><td>GOV-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-web/providers/Microsoft.Web/sites/app-prd-01">app-prd-01</td><td>App Services</td><td>rg-prd-web</td>
+          <td>Contoso-Production</td><td>Missing tag(s): environment, owner</td></tr>
+      
+        <tr><td>GOV-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-web/providers/Microsoft.Web/serverFarms/asp-dev-00">asp-dev-00</td><td>App Service plans</td><td>rg-dev-web</td>
+          <td>Contoso-NonProduction</td><td>Missing tag(s): environment, owner</td></tr>
+      
+        <tr><td>GOV-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-web/providers/Microsoft.Web/serverFarms/asp-dev-01">asp-dev-01</td><td>App Service plans</td><td>rg-dev-web</td>
+          <td>Contoso-NonProduction</td><td>Missing tag(s): environment, owner</td></tr>
+      
+        <tr><td>GOV-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app01/providers/Microsoft.Compute/disks/disk-dev-orphan-0">disk-dev-orphan-0</td><td>Managed disks</td><td>rg-dev-app01</td>
+          <td>Contoso-NonProduction</td><td>Missing tag(s): costCenter</td></tr>
+      
+        <tr><td>GOV-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app01/providers/Microsoft.Compute/disks/disk-prd-orphan-3">disk-prd-orphan-3</td><td>Managed disks</td><td>rg-prd-app01</td>
+          <td>Contoso-Production</td><td>Missing tag(s): costCenter</td></tr>
+      
+        <tr><td>GOV-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-sec/providers/Microsoft.KeyVault/vaults/kv-prd-00">kv-prd-00</td><td>Key vaults</td><td>rg-prd-sec</td>
+          <td>Contoso-Production</td><td>Missing tag(s): environment, owner, costCenter</td></tr>
+      
+        <tr><td>GOV-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-sec/providers/Microsoft.KeyVault/vaults/kv-prd-01">kv-prd-01</td><td>Key vaults</td><td>rg-prd-sec</td>
+          <td>Contoso-Production</td><td>Missing tag(s): costCenter</td></tr>
+      
+        <tr><td>GOV-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app03/providers/Microsoft.Network/networkInterfaces/nic-dev-002">nic-dev-002</td><td>Network interfaces</td><td>rg-dev-app03</td>
+          <td>Contoso-NonProduction</td><td>Missing tag(s): environment, owner, costCenter</td></tr>
+      
+        <tr><td>GOV-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app01/providers/Microsoft.Network/networkInterfaces/nic-dev-004">nic-dev-004</td><td>Network interfaces</td><td>rg-dev-app01</td>
+          <td>Contoso-NonProduction</td><td>Missing tag(s): environment, owner, costCenter</td></tr>
+      
+        <tr><td>GOV-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app02/providers/Microsoft.Network/networkInterfaces/nic-dev-005">nic-dev-005</td><td>Network interfaces</td><td>rg-dev-app02</td>
+          <td>Contoso-NonProduction</td><td>Missing tag(s): environment</td></tr>
+      
+        <tr><td>GOV-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app03/providers/Microsoft.Network/networkInterfaces/nic-dev-006">nic-dev-006</td><td>Network interfaces</td><td>rg-dev-app03</td>
+          <td>Contoso-NonProduction</td><td>Missing tag(s): owner, costCenter</td></tr>
+      
+        <tr><td>GOV-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app04/providers/Microsoft.Network/networkInterfaces/nic-prd-003">nic-prd-003</td><td>Network interfaces</td><td>rg-prd-app04</td>
+          <td>Contoso-Production</td><td>Missing tag(s): environment, costCenter</td></tr>
+      
+        <tr><td>GOV-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app03/providers/Microsoft.Network/networkInterfaces/nic-prd-006">nic-prd-006</td><td>Network interfaces</td><td>rg-prd-app03</td>
+          <td>Contoso-Production</td><td>Missing tag(s): environment, owner</td></tr>
+      
+        <tr><td>GOV-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-hub-westeurope/providers/Microsoft.Network/networkSecurityGroups/nsg-app-westeurope">nsg-app-westeurope</td><td>Network security groups</td><td>rg-hub-westeurope</td>
+          <td>Contoso-Connectivity</td><td>Missing tag(s): environment, owner, costCenter</td></tr>
+      
+        <tr><td>GOV-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-hub-eastus/providers/Microsoft.Network/publicIPAddresses/pip-eastus-0">pip-eastus-0</td><td>Public IP addresses</td><td>rg-hub-eastus</td>
+          <td>Contoso-Connectivity</td><td>Missing tag(s): environment, owner, costCenter</td></tr>
+      
+        <tr><td>GOV-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-hub-eastus/providers/Microsoft.Network/publicIPAddresses/pip-eastus-1">pip-eastus-1</td><td>Public IP addresses</td><td>rg-hub-eastus</td>
+          <td>Contoso-Connectivity</td><td>Missing tag(s): owner, costCenter</td></tr>
+      
+        <tr><td>GOV-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-hub-eastus/providers/Microsoft.Network/publicIPAddresses/pip-eastus-2">pip-eastus-2</td><td>Public IP addresses</td><td>rg-hub-eastus</td>
+          <td>Contoso-Connectivity</td><td>Missing tag(s): environment, owner</td></tr>
+      
+        <tr><td>GOV-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-data/providers/Microsoft.Sql/servers/sql-dev-01">sql-dev-01</td><td>SQL servers</td><td>rg-dev-data</td>
+          <td>Contoso-NonProduction</td><td>Missing tag(s): environment, costCenter</td></tr>
+      
+        <tr><td>GOV-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-data/providers/Microsoft.Storage/storageAccounts/stdevdata02">stdevdata02</td><td>Storage accounts</td><td>rg-dev-data</td>
+          <td>Contoso-NonProduction</td><td>Missing tag(s): environment, owner, costCenter</td></tr>
+      
+        <tr><td>GOV-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-data/providers/Microsoft.Storage/storageAccounts/stprddata04">stprddata04</td><td>Storage accounts</td><td>rg-prd-data</td>
+          <td>Contoso-Production</td><td>Missing tag(s): environment, owner</td></tr>
+      
+        <tr><td>GOV-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app04/providers/Microsoft.Compute/virtualMachines/vm-dev-003">vm-dev-003</td><td>Virtual machines</td><td>rg-dev-app04</td>
+          <td>Contoso-NonProduction</td><td>Missing tag(s): owner, costCenter</td></tr>
+      
+        <tr><td>GOV-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app04/providers/Microsoft.Compute/disks/vm-dev-003_OsDisk">vm-dev-003_OsDisk</td><td>Managed disks</td><td>rg-dev-app04</td>
+          <td>Contoso-NonProduction</td><td>Missing tag(s): environment, owner, costCenter</td></tr>
+      
+        <tr><td>GOV-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app03/providers/Microsoft.Compute/virtualMachines/vm-dev-006">vm-dev-006</td><td>Virtual machines</td><td>rg-dev-app03</td>
+          <td>Contoso-NonProduction</td><td>Missing tag(s): environment, owner, costCenter</td></tr>
+      
+        <tr><td>GOV-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app01/providers/Microsoft.Compute/virtualMachines/vm-dev-008">vm-dev-008</td><td>Virtual machines</td><td>rg-dev-app01</td>
+          <td>Contoso-NonProduction</td><td>Missing tag(s): environment, owner, costCenter</td></tr>
+      
+        <tr><td>GOV-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app01/providers/Microsoft.Compute/disks/vm-prd-000_OsDisk">vm-prd-000_OsDisk</td><td>Managed disks</td><td>rg-prd-app01</td>
+          <td>Contoso-Production</td><td>Missing tag(s): environment, owner, costCenter</td></tr>
+      
+        <tr><td>GOV-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app02/providers/Microsoft.Compute/virtualMachines/vm-prd-001">vm-prd-001</td><td>Virtual machines</td><td>rg-prd-app02</td>
+          <td>Contoso-Production</td><td>Missing tag(s): environment, owner, costCenter</td></tr>
+      
+        <tr><td>GOV-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app04/providers/Microsoft.Compute/disks/vm-prd-003_OsDisk">vm-prd-003_OsDisk</td><td>Managed disks</td><td>rg-prd-app04</td>
+          <td>Contoso-Production</td><td>Missing tag(s): environment, owner, costCenter</td></tr>
+      
+        <tr><td>GOV-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app01/providers/Microsoft.Compute/virtualMachines/vm-prd-004">vm-prd-004</td><td>Virtual machines</td><td>rg-prd-app01</td>
+          <td>Contoso-Production</td><td>Missing tag(s): environment, owner</td></tr>
+      
+        <tr><td>GOV-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app02/providers/Microsoft.Compute/disks/vm-prd-005_OsDisk">vm-prd-005_OsDisk</td><td>Managed disks</td><td>rg-prd-app02</td>
+          <td>Contoso-Production</td><td>Missing tag(s): environment, owner, costCenter</td></tr>
+      
+        <tr><td>GOV-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app04/providers/Microsoft.Compute/disks/vm-prd-007_OsDisk">vm-prd-007_OsDisk</td><td>Managed disks</td><td>rg-prd-app04</td>
+          <td>Contoso-Production</td><td>Missing tag(s): environment, owner, costCenter</td></tr>
+      
+        <tr><td>GOV-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app02/providers/Microsoft.Compute/virtualMachines/vm-prd-009">vm-prd-009</td><td>Virtual machines</td><td>rg-prd-app02</td>
+          <td>Contoso-Production</td><td>Missing tag(s): environment, owner, costCenter</td></tr>
+      
+        <tr><td>GOV-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app02/providers/Microsoft.Compute/disks/vm-prd-009_OsDisk">vm-prd-009_OsDisk</td><td>Managed disks</td><td>rg-prd-app02</td>
+          <td>Contoso-Production</td><td>Missing tag(s): costCenter</td></tr>
+      
+        <tr><td>GOV-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app03/providers/Microsoft.Compute/virtualMachines/vm-prd-010">vm-prd-010</td><td>Virtual machines</td><td>rg-prd-app03</td>
+          <td>Contoso-Production</td><td>Missing tag(s): environment, owner, costCenter</td></tr>
+      
+        <tr><td>GOV-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app02/providers/Microsoft.Compute/disks/vm-prd-013_OsDisk">vm-prd-013_OsDisk</td><td>Managed disks</td><td>rg-prd-app02</td>
+          <td>Contoso-Production</td><td>Missing tag(s): environment, owner, costCenter</td></tr>
+      
+        <tr><td>GOV-002</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app01/providers/Microsoft.Compute/disks/disk-dev-orphan-2">disk-dev-orphan-2</td><td>Managed disks</td><td>rg-dev-app01</td>
+          <td>Contoso-NonProduction</td><td>Deployed in &#39;centralindia&#39;, outside approved regions</td></tr>
+      
+        <tr><td>GOV-002</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app01/providers/Microsoft.Compute/disks/disk-prd-orphan-3">disk-prd-orphan-3</td><td>Managed disks</td><td>rg-prd-app01</td>
+          <td>Contoso-Production</td><td>Deployed in &#39;centralindia&#39;, outside approved regions</td></tr>
+      
+        <tr><td>GOV-002</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app01/providers/Microsoft.Network/networkInterfaces/nic-prd-012">nic-prd-012</td><td>Network interfaces</td><td>rg-prd-app01</td>
+          <td>Contoso-Production</td><td>Deployed in &#39;centralindia&#39;, outside approved regions</td></tr>
+      
+        <tr><td>GOV-002</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-data/providers/Microsoft.Sql/servers/sql-prd-01">sql-prd-01</td><td>SQL servers</td><td>rg-prd-data</td>
+          <td>Contoso-Production</td><td>Deployed in &#39;centralindia&#39;, outside approved regions</td></tr>
+      
+        <tr><td>GOV-002</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-data/providers/Microsoft.Storage/storageAccounts/stprddata00">stprddata00</td><td>Storage accounts</td><td>rg-prd-data</td>
+          <td>Contoso-Production</td><td>Deployed in &#39;centralindia&#39;, outside approved regions</td></tr>
+      
+        <tr><td>GOV-002</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-data/providers/Microsoft.Storage/storageAccounts/stprddata02">stprddata02</td><td>Storage accounts</td><td>rg-prd-data</td>
+          <td>Contoso-Production</td><td>Deployed in &#39;centralindia&#39;, outside approved regions</td></tr>
+      
+        <tr><td>GOV-002</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app01/providers/Microsoft.Compute/virtualMachines/vm-prd-012">vm-prd-012</td><td>Virtual machines</td><td>rg-prd-app01</td>
+          <td>Contoso-Production</td><td>Deployed in &#39;centralindia&#39;, outside approved regions</td></tr>
+      
+        <tr><td>GOV-002</td><td><span class="pill sev-Medium">Medium</span></td><td>Governance</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app01/providers/Microsoft.Compute/disks/vm-prd-012_OsDisk">vm-prd-012_OsDisk</td><td>Managed disks</td><td>rg-prd-app01</td>
+          <td>Contoso-Production</td><td>Deployed in &#39;centralindia&#39;, outside approved regions</td></tr>
+      
+        <tr><td>REL-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Reliability</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app01/providers/Microsoft.Compute/virtualMachines/vm-dev-000">vm-dev-000</td><td>Virtual machines</td><td>rg-dev-app01</td>
+          <td>Contoso-NonProduction</td><td>Not deployed to an availability zone, availability set or scale set</td></tr>
+      
+        <tr><td>REL-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Reliability</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app02/providers/Microsoft.Compute/virtualMachines/vm-dev-001">vm-dev-001</td><td>Virtual machines</td><td>rg-dev-app02</td>
+          <td>Contoso-NonProduction</td><td>Not deployed to an availability zone, availability set or scale set</td></tr>
+      
+        <tr><td>REL-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Reliability</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app03/providers/Microsoft.Compute/virtualMachines/vm-dev-002">vm-dev-002</td><td>Virtual machines</td><td>rg-dev-app03</td>
+          <td>Contoso-NonProduction</td><td>Not deployed to an availability zone, availability set or scale set</td></tr>
+      
+        <tr><td>REL-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Reliability</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app04/providers/Microsoft.Compute/virtualMachines/vm-dev-003">vm-dev-003</td><td>Virtual machines</td><td>rg-dev-app04</td>
+          <td>Contoso-NonProduction</td><td>Not deployed to an availability zone, availability set or scale set</td></tr>
+      
+        <tr><td>REL-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Reliability</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app01/providers/Microsoft.Compute/virtualMachines/vm-dev-004">vm-dev-004</td><td>Virtual machines</td><td>rg-dev-app01</td>
+          <td>Contoso-NonProduction</td><td>Not deployed to an availability zone, availability set or scale set</td></tr>
+      
+        <tr><td>REL-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Reliability</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app02/providers/Microsoft.Compute/virtualMachines/vm-dev-005">vm-dev-005</td><td>Virtual machines</td><td>rg-dev-app02</td>
+          <td>Contoso-NonProduction</td><td>Not deployed to an availability zone, availability set or scale set</td></tr>
+      
+        <tr><td>REL-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Reliability</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app03/providers/Microsoft.Compute/virtualMachines/vm-dev-006">vm-dev-006</td><td>Virtual machines</td><td>rg-dev-app03</td>
+          <td>Contoso-NonProduction</td><td>Not deployed to an availability zone, availability set or scale set</td></tr>
+      
+        <tr><td>REL-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Reliability</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app04/providers/Microsoft.Compute/virtualMachines/vm-dev-007">vm-dev-007</td><td>Virtual machines</td><td>rg-dev-app04</td>
+          <td>Contoso-NonProduction</td><td>Not deployed to an availability zone, availability set or scale set</td></tr>
+      
+        <tr><td>REL-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Reliability</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app01/providers/Microsoft.Compute/virtualMachines/vm-dev-008">vm-dev-008</td><td>Virtual machines</td><td>rg-dev-app01</td>
+          <td>Contoso-NonProduction</td><td>Not deployed to an availability zone, availability set or scale set</td></tr>
+      
+        <tr><td>REL-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Reliability</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app02/providers/Microsoft.Compute/virtualMachines/vm-dev-009">vm-dev-009</td><td>Virtual machines</td><td>rg-dev-app02</td>
+          <td>Contoso-NonProduction</td><td>Not deployed to an availability zone, availability set or scale set</td></tr>
+      
+        <tr><td>REL-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Reliability</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app04/providers/Microsoft.Compute/virtualMachines/vm-prd-003">vm-prd-003</td><td>Virtual machines</td><td>rg-prd-app04</td>
+          <td>Contoso-Production</td><td>Not deployed to an availability zone, availability set or scale set</td></tr>
+      
+        <tr><td>REL-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Reliability</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app01/providers/Microsoft.Compute/virtualMachines/vm-prd-004">vm-prd-004</td><td>Virtual machines</td><td>rg-prd-app01</td>
+          <td>Contoso-Production</td><td>Not deployed to an availability zone, availability set or scale set</td></tr>
+      
+        <tr><td>REL-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Reliability</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app03/providers/Microsoft.Compute/virtualMachines/vm-prd-006">vm-prd-006</td><td>Virtual machines</td><td>rg-prd-app03</td>
+          <td>Contoso-Production</td><td>Not deployed to an availability zone, availability set or scale set</td></tr>
+      
+        <tr><td>REL-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Reliability</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app04/providers/Microsoft.Compute/virtualMachines/vm-prd-007">vm-prd-007</td><td>Virtual machines</td><td>rg-prd-app04</td>
+          <td>Contoso-Production</td><td>Not deployed to an availability zone, availability set or scale set</td></tr>
+      
+        <tr><td>REL-001</td><td><span class="pill sev-Medium">Medium</span></td><td>Reliability</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app02/providers/Microsoft.Compute/virtualMachines/vm-prd-009">vm-prd-009</td><td>Virtual machines</td><td>rg-prd-app02</td>
+          <td>Contoso-Production</td><td>Not deployed to an availability zone, availability set or scale set</td></tr>
+      
+        <tr><td>SEC-003</td><td><span class="pill sev-Medium">Medium</span></td><td>Security</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-data/providers/Microsoft.Storage/storageAccounts/stdevdata02">stdevdata02</td><td>Storage accounts</td><td>rg-dev-data</td>
+          <td>Contoso-NonProduction</td><td>Minimum TLS version is TLS1_0</td></tr>
+      
+        <tr><td>SEC-003</td><td><span class="pill sev-Medium">Medium</span></td><td>Security</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-data/providers/Microsoft.Storage/storageAccounts/stdevdata04">stdevdata04</td><td>Storage accounts</td><td>rg-dev-data</td>
+          <td>Contoso-NonProduction</td><td>Minimum TLS version is TLS1_0</td></tr>
+      
+        <tr><td>SEC-004</td><td><span class="pill sev-Medium">Medium</span></td><td>Security</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-sec/providers/Microsoft.KeyVault/vaults/kv-dev-00">kv-dev-00</td><td>Key vaults</td><td>rg-dev-sec</td>
+          <td>Contoso-NonProduction</td><td>Purge protection is disabled</td></tr>
+      
+        <tr><td>SEC-005</td><td><span class="pill sev-Medium">Medium</span></td><td>Security</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-data/providers/Microsoft.Sql/servers/sql-dev-01">sql-dev-01</td><td>SQL servers</td><td>rg-dev-data</td>
+          <td>Contoso-NonProduction</td><td>Public network access is enabled</td></tr>
+      
+        <tr><td>COST-002</td><td><span class="pill sev-Low">Low</span></td><td>Cost Optimization</td>
+          <td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-hub-eastus/providers/Microsoft.Network/publicIPAddresses/pip-eastus-0">pip-eastus-0</td><td>Public IP addresses</td><td>rg-hub-eastus</td>
+          <td>Contoso-Connectivity</td><td>Public IP is not associated with any resource</td></tr>
+      
+        <tr><td>COST-002</td><td><span class="pill sev-Low">Low</span></td><td>Cost Optimization</td>
+          <td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-hub-westeurope/providers/Microsoft.Network/publicIPAddresses/pip-westeurope-0">pip-westeurope-0</td><td>Public IP addresses</td><td>rg-hub-westeurope</td>
+          <td>Contoso-Connectivity</td><td>Public IP is not associated with any resource</td></tr>
+      
+        <tr><td>COST-004</td><td><span class="pill sev-Low">Low</span></td><td>Cost Optimization</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app01/providers/Microsoft.Compute/virtualMachines/vm-prd-008">vm-prd-008</td><td>Virtual machines</td><td>rg-prd-app01</td>
+          <td>Contoso-Production</td><td>VM is deallocated; disks and IPs still incur cost</td></tr>
+      
+        <tr><td>OPS-001</td><td><span class="pill sev-Low">Low</span></td><td>Operational Excellence</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app03/providers/Microsoft.Compute/virtualMachines/vm-dev-006">vm-dev-006</td><td>Virtual machines</td><td>rg-dev-app03</td>
+          <td>Contoso-NonProduction</td><td>Previous-generation size Standard_A2_v2</td></tr>
+      
+        <tr><td>OPS-001</td><td><span class="pill sev-Low">Low</span></td><td>Operational Excellence</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app02/providers/Microsoft.Compute/virtualMachines/vm-prd-001">vm-prd-001</td><td>Virtual machines</td><td>rg-prd-app02</td>
+          <td>Contoso-Production</td><td>Previous-generation size Standard_DS2_v2</td></tr>
+      
+        <tr><td>OPS-001</td><td><span class="pill sev-Low">Low</span></td><td>Operational Excellence</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app03/providers/Microsoft.Compute/virtualMachines/vm-prd-002">vm-prd-002</td><td>Virtual machines</td><td>rg-prd-app03</td>
+          <td>Contoso-Production</td><td>Previous-generation size Standard_A2_v2</td></tr>
+      
+        <tr><td>OPS-001</td><td><span class="pill sev-Low">Low</span></td><td>Operational Excellence</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app01/providers/Microsoft.Compute/virtualMachines/vm-prd-004">vm-prd-004</td><td>Virtual machines</td><td>rg-prd-app01</td>
+          <td>Contoso-Production</td><td>Previous-generation size Standard_DS2_v2</td></tr>
+      
+        <tr><td>OPS-001</td><td><span class="pill sev-Low">Low</span></td><td>Operational Excellence</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app01/providers/Microsoft.Compute/virtualMachines/vm-prd-008">vm-prd-008</td><td>Virtual machines</td><td>rg-prd-app01</td>
+          <td>Contoso-Production</td><td>Previous-generation size Standard_A2_v2</td></tr>
+      
+        <tr><td>OPS-002</td><td><span class="pill sev-Low">Low</span></td><td>Operational Excellence</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-mon/providers/Microsoft.OperationalInsights/workspaces/log-dev-01">log-dev-01</td><td>Log Analytics workspaces</td><td>rg-dev-mon</td>
+          <td>Contoso-NonProduction</td><td>Retention is 30 days (target ≥ 90)</td></tr>
+      
+        <tr><td>OPS-002</td><td><span class="pill sev-Low">Low</span></td><td>Operational Excellence</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-mon/providers/Microsoft.OperationalInsights/workspaces/log-prd-01">log-prd-01</td><td>Log Analytics workspaces</td><td>rg-prd-mon</td>
+          <td>Contoso-Production</td><td>Retention is 30 days (target ≥ 90)</td></tr>
+      
+        <tr><td>REL-003</td><td><span class="pill sev-Low">Low</span></td><td>Reliability</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-data/providers/Microsoft.Storage/storageAccounts/stdevdata02">stdevdata02</td><td>Storage accounts</td><td>rg-dev-data</td>
+          <td>Contoso-NonProduction</td><td>Replication is Standard_LRS (single datacenter)</td></tr>
+      
+        <tr><td>REL-003</td><td><span class="pill sev-Low">Low</span></td><td>Reliability</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-data/providers/Microsoft.Storage/storageAccounts/stprddata00">stprddata00</td><td>Storage accounts</td><td>rg-prd-data</td>
+          <td>Contoso-Production</td><td>Replication is Standard_LRS (single datacenter)</td></tr>
+      
+        <tr><td>REL-003</td><td><span class="pill sev-Low">Low</span></td><td>Reliability</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-data/providers/Microsoft.Storage/storageAccounts/stprddata04">stprddata04</td><td>Storage accounts</td><td>rg-prd-data</td>
+          <td>Contoso-Production</td><td>Replication is Standard_LRS (single datacenter)</td></tr>
+      
+        <tr><td>REL-004</td><td><span class="pill sev-Low">Low</span></td><td>Reliability</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-data/providers/Microsoft.Sql/servers/databases/sql-dev-01/db1">sql-dev-01/db1</td><td>SQL databases</td><td>rg-dev-data</td>
+          <td>Contoso-NonProduction</td><td>Database is not zone redundant</td></tr>
+      
+        <tr><td>REL-004</td><td><span class="pill sev-Low">Low</span></td><td>Reliability</td>
+          <td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-data/providers/Microsoft.Sql/servers/databases/sql-dev-01/db2">sql-dev-01/db2</td><td>SQL databases</td><td>rg-dev-data</td>
+          <td>Contoso-NonProduction</td><td>Database is not zone redundant</td></tr>
+      
+        <tr><td>REL-004</td><td><span class="pill sev-Low">Low</span></td><td>Reliability</td>
+          <td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-data/providers/Microsoft.Sql/servers/databases/sql-prd-01/db1">sql-prd-01/db1</td><td>SQL databases</td><td>rg-prd-data</td>
+          <td>Contoso-Production</td><td>Database is not zone redundant</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="resources">
+  <h2>Resource inventory <span class="muted" style="font-size:15px">(152)</span></h2>
+  <div class="filters" data-for="resources-table">
+    <input type="search" placeholder="Search resources…" aria-label="Search resources">
+  </div>
+  <div class="card table-wrap" style="padding:0;max-height:640px;overflow:auto">
+    <table id="resources-table" class="sortable">
+      <thead><tr><th>Name</th><th>Type</th><th>Resource group</th><th>Location</th><th>Subscription</th><th>SKU</th><th>Tags</th></tr></thead>
+      <tbody>
+        <tr><td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-dns/providers/Microsoft.Network/privateDnsZones/privatelink.blob.core.windows.net">privatelink.blob.core.windows.net</td><td>privatednszones</td><td>rg-dns</td><td>global</td>
+          <td>Contoso-Connectivity</td><td></td>
+          <td class="muted">environment=shared, owner=app-team, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-dns/providers/Microsoft.Network/privateDnsZones/privatelink.database.windows.net">privatelink.database.windows.net</td><td>privatednszones</td><td>rg-dns</td><td>global</td>
+          <td>Contoso-Connectivity</td><td></td>
+          <td class="muted">environment=shared, owner=app-team, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-hub-eastus/providers/Microsoft.Network/azureFirewalls/afw-hub-eastus">afw-hub-eastus</td><td>Azure Firewalls</td><td>rg-hub-eastus</td><td>eastus</td>
+          <td>Contoso-Connectivity</td><td>AZFW_VNet</td>
+          <td class="muted">environment=shared, owner=data-team, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-hub-eastus/providers/Microsoft.Network/bastionHosts/bas-hub-eastus">bas-hub-eastus</td><td>bastionhosts</td><td>rg-hub-eastus</td><td>eastus</td>
+          <td>Contoso-Connectivity</td><td>Standard</td>
+          <td class="muted">environment=shared, owner=platform, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-hub-eastus/providers/Microsoft.Network/connections/cn-hub-eastus-to-dc1">cn-hub-eastus-to-dc1</td><td>connections</td><td>rg-hub-eastus</td><td>eastus</td>
+          <td>Contoso-Connectivity</td><td></td>
+          <td class="muted">environment=shared, owner=platform, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-hub-eastus/providers/Microsoft.Network/localNetworkGateways/lng-onprem-dc1">lng-onprem-dc1</td><td>localnetworkgateways</td><td>rg-hub-eastus</td><td>eastus</td>
+          <td>Contoso-Connectivity</td><td></td>
+          <td class="muted">environment=shared, owner=app-team, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-hub-eastus/providers/Microsoft.Network/networkSecurityGroups/nsg-app-eastus">nsg-app-eastus</td><td>Network security groups</td><td>rg-hub-eastus</td><td>eastus</td>
+          <td>Contoso-Connectivity</td><td></td>
+          <td class="muted">environment=shared, owner=data-team, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-hub-eastus/providers/Microsoft.Network/networkSecurityGroups/nsg-mgmt-eastus">nsg-mgmt-eastus</td><td>Network security groups</td><td>rg-hub-eastus</td><td>eastus</td>
+          <td>Contoso-Connectivity</td><td></td>
+          <td class="muted">environment=shared, owner=platform, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-hub-eastus/providers/Microsoft.Network/publicIPAddresses/pip-eastus-0">pip-eastus-0</td><td>Public IP addresses</td><td>rg-hub-eastus</td><td>eastus</td>
+          <td>Contoso-Connectivity</td><td>Standard</td>
+          <td class="muted"></td></tr>
+      
+        <tr><td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-hub-eastus/providers/Microsoft.Network/publicIPAddresses/pip-eastus-1">pip-eastus-1</td><td>Public IP addresses</td><td>rg-hub-eastus</td><td>eastus</td>
+          <td>Contoso-Connectivity</td><td>Standard</td>
+          <td class="muted">environment=shared</td></tr>
+      
+        <tr><td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-hub-eastus/providers/Microsoft.Network/publicIPAddresses/pip-eastus-2">pip-eastus-2</td><td>Public IP addresses</td><td>rg-hub-eastus</td><td>eastus</td>
+          <td>Contoso-Connectivity</td><td>Standard</td>
+          <td class="muted">costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-hub-eastus/providers/Microsoft.Network/virtualNetworkGateways/vgw-hub-eastus">vgw-hub-eastus</td><td>virtualnetworkgateways</td><td>rg-hub-eastus</td><td>eastus</td>
+          <td>Contoso-Connectivity</td><td>VpnGw2AZ</td>
+          <td class="muted">environment=shared, owner=platform, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-hub-eastus/providers/Microsoft.Network/virtualNetworks/vnet-hub-eastus">vnet-hub-eastus</td><td>Virtual networks</td><td>rg-hub-eastus</td><td>eastus</td>
+          <td>Contoso-Connectivity</td><td></td>
+          <td class="muted">environment=shared, owner=app-team, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-hub-westeurope/providers/Microsoft.Network/azureFirewalls/afw-hub-westeurope">afw-hub-westeurope</td><td>Azure Firewalls</td><td>rg-hub-westeurope</td><td>westeurope</td>
+          <td>Contoso-Connectivity</td><td>AZFW_VNet</td>
+          <td class="muted">environment=shared, owner=app-team, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-hub-westeurope/providers/Microsoft.Network/networkSecurityGroups/nsg-app-westeurope">nsg-app-westeurope</td><td>Network security groups</td><td>rg-hub-westeurope</td><td>westeurope</td>
+          <td>Contoso-Connectivity</td><td></td>
+          <td class="muted"></td></tr>
+      
+        <tr><td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-hub-westeurope/providers/Microsoft.Network/networkSecurityGroups/nsg-mgmt-westeurope">nsg-mgmt-westeurope</td><td>Network security groups</td><td>rg-hub-westeurope</td><td>westeurope</td>
+          <td>Contoso-Connectivity</td><td></td>
+          <td class="muted">environment=shared, owner=platform, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-hub-westeurope/providers/Microsoft.Network/publicIPAddresses/pip-westeurope-0">pip-westeurope-0</td><td>Public IP addresses</td><td>rg-hub-westeurope</td><td>westeurope</td>
+          <td>Contoso-Connectivity</td><td>Standard</td>
+          <td class="muted">environment=shared, owner=platform, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-hub-westeurope/providers/Microsoft.Network/publicIPAddresses/pip-westeurope-1">pip-westeurope-1</td><td>Public IP addresses</td><td>rg-hub-westeurope</td><td>westeurope</td>
+          <td>Contoso-Connectivity</td><td>Standard</td>
+          <td class="muted">environment=shared, owner=app-team, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-hub-westeurope/providers/Microsoft.Network/publicIPAddresses/pip-westeurope-2">pip-westeurope-2</td><td>Public IP addresses</td><td>rg-hub-westeurope</td><td>westeurope</td>
+          <td>Contoso-Connectivity</td><td>Standard</td>
+          <td class="muted">environment=shared, owner=platform, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-hub-westeurope/providers/Microsoft.Network/virtualNetworks/vnet-hub-westeurope">vnet-hub-westeurope</td><td>Virtual networks</td><td>rg-hub-westeurope</td><td>westeurope</td>
+          <td>Contoso-Connectivity</td><td></td>
+          <td class="muted">environment=shared, owner=platform, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-legacy/providers/Microsoft.ClassicCompute/domainNames/legacy-cloudservice">legacy-cloudservice</td><td>Classic cloud services</td><td>rg-legacy</td><td>eastus</td>
+          <td>Contoso-Connectivity</td><td></td>
+          <td class="muted">environment=shared, owner=data-team, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app01/providers/Microsoft.Compute/disks/disk-dev-orphan-0">disk-dev-orphan-0</td><td>Managed disks</td><td>rg-dev-app01</td><td>westeurope</td>
+          <td>Contoso-NonProduction</td><td>Premium_LRS</td>
+          <td class="muted">environment=dev, owner=app-team</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app01/providers/Microsoft.Compute/disks/disk-dev-orphan-1">disk-dev-orphan-1</td><td>Managed disks</td><td>rg-dev-app01</td><td>westeurope</td>
+          <td>Contoso-NonProduction</td><td>Premium_LRS</td>
+          <td class="muted">environment=dev, owner=data-team, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app01/providers/Microsoft.Compute/disks/disk-dev-orphan-2">disk-dev-orphan-2</td><td>Managed disks</td><td>rg-dev-app01</td><td>centralindia</td>
+          <td>Contoso-NonProduction</td><td>StandardSSD_LRS</td>
+          <td class="muted">environment=dev, owner=platform, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app01/providers/Microsoft.Compute/disks/disk-dev-orphan-3">disk-dev-orphan-3</td><td>Managed disks</td><td>rg-dev-app01</td><td>eastus</td>
+          <td>Contoso-NonProduction</td><td>Premium_LRS</td>
+          <td class="muted">environment=dev, owner=data-team, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app01/providers/Microsoft.Network/networkInterfaces/nic-dev-000">nic-dev-000</td><td>Network interfaces</td><td>rg-dev-app01</td><td>eastus</td>
+          <td>Contoso-NonProduction</td><td></td>
+          <td class="muted">environment=dev, owner=data-team, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app01/providers/Microsoft.Network/networkInterfaces/nic-dev-004">nic-dev-004</td><td>Network interfaces</td><td>rg-dev-app01</td><td>eastus</td>
+          <td>Contoso-NonProduction</td><td></td>
+          <td class="muted"></td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app01/providers/Microsoft.Network/networkInterfaces/nic-dev-008">nic-dev-008</td><td>Network interfaces</td><td>rg-dev-app01</td><td>eastus</td>
+          <td>Contoso-NonProduction</td><td></td>
+          <td class="muted">environment=dev, owner=data-team, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app01/providers/Microsoft.Compute/virtualMachines/vm-dev-000">vm-dev-000</td><td>Virtual machines</td><td>rg-dev-app01</td><td>eastus</td>
+          <td>Contoso-NonProduction</td><td></td>
+          <td class="muted">environment=dev, owner=platform, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app01/providers/Microsoft.Compute/disks/vm-dev-000_OsDisk">vm-dev-000_OsDisk</td><td>Managed disks</td><td>rg-dev-app01</td><td>eastus</td>
+          <td>Contoso-NonProduction</td><td>Premium_LRS</td>
+          <td class="muted">environment=dev, owner=data-team, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app01/providers/Microsoft.Compute/virtualMachines/vm-dev-004">vm-dev-004</td><td>Virtual machines</td><td>rg-dev-app01</td><td>eastus</td>
+          <td>Contoso-NonProduction</td><td></td>
+          <td class="muted">environment=dev, owner=app-team, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app01/providers/Microsoft.Compute/disks/vm-dev-004_OsDisk">vm-dev-004_OsDisk</td><td>Managed disks</td><td>rg-dev-app01</td><td>eastus</td>
+          <td>Contoso-NonProduction</td><td>Premium_LRS</td>
+          <td class="muted">environment=dev, owner=platform, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app01/providers/Microsoft.Compute/virtualMachines/vm-dev-008">vm-dev-008</td><td>Virtual machines</td><td>rg-dev-app01</td><td>eastus</td>
+          <td>Contoso-NonProduction</td><td></td>
+          <td class="muted"></td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app01/providers/Microsoft.Compute/disks/vm-dev-008_OsDisk">vm-dev-008_OsDisk</td><td>Managed disks</td><td>rg-dev-app01</td><td>eastus</td>
+          <td>Contoso-NonProduction</td><td>Premium_LRS</td>
+          <td class="muted">environment=dev, owner=app-team, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app02/providers/Microsoft.Network/networkInterfaces/nic-dev-001">nic-dev-001</td><td>Network interfaces</td><td>rg-dev-app02</td><td>uksouth</td>
+          <td>Contoso-NonProduction</td><td></td>
+          <td class="muted">environment=dev, owner=data-team, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app02/providers/Microsoft.Network/networkInterfaces/nic-dev-005">nic-dev-005</td><td>Network interfaces</td><td>rg-dev-app02</td><td>uksouth</td>
+          <td>Contoso-NonProduction</td><td></td>
+          <td class="muted">owner=platform, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app02/providers/Microsoft.Network/networkInterfaces/nic-dev-009">nic-dev-009</td><td>Network interfaces</td><td>rg-dev-app02</td><td>uksouth</td>
+          <td>Contoso-NonProduction</td><td></td>
+          <td class="muted">environment=dev, owner=data-team, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app02/providers/Microsoft.Compute/virtualMachines/vm-dev-001">vm-dev-001</td><td>Virtual machines</td><td>rg-dev-app02</td><td>uksouth</td>
+          <td>Contoso-NonProduction</td><td></td>
+          <td class="muted">environment=dev, owner=data-team, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app02/providers/Microsoft.Compute/disks/vm-dev-001_OsDisk">vm-dev-001_OsDisk</td><td>Managed disks</td><td>rg-dev-app02</td><td>uksouth</td>
+          <td>Contoso-NonProduction</td><td>Premium_LRS</td>
+          <td class="muted">environment=dev, owner=app-team, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app02/providers/Microsoft.Compute/virtualMachines/vm-dev-005">vm-dev-005</td><td>Virtual machines</td><td>rg-dev-app02</td><td>uksouth</td>
+          <td>Contoso-NonProduction</td><td></td>
+          <td class="muted">environment=dev, owner=platform, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app02/providers/Microsoft.Compute/disks/vm-dev-005_OsDisk">vm-dev-005_OsDisk</td><td>Managed disks</td><td>rg-dev-app02</td><td>uksouth</td>
+          <td>Contoso-NonProduction</td><td>Premium_LRS</td>
+          <td class="muted">environment=dev, owner=app-team, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app02/providers/Microsoft.Compute/virtualMachines/vm-dev-009">vm-dev-009</td><td>Virtual machines</td><td>rg-dev-app02</td><td>uksouth</td>
+          <td>Contoso-NonProduction</td><td></td>
+          <td class="muted">environment=dev, owner=data-team, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app02/providers/Microsoft.Compute/disks/vm-dev-009_OsDisk">vm-dev-009_OsDisk</td><td>Managed disks</td><td>rg-dev-app02</td><td>uksouth</td>
+          <td>Contoso-NonProduction</td><td>Premium_LRS</td>
+          <td class="muted">environment=dev, owner=app-team, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app03/providers/Microsoft.Network/networkInterfaces/nic-dev-002">nic-dev-002</td><td>Network interfaces</td><td>rg-dev-app03</td><td>eastus</td>
+          <td>Contoso-NonProduction</td><td></td>
+          <td class="muted"></td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app03/providers/Microsoft.Network/networkInterfaces/nic-dev-006">nic-dev-006</td><td>Network interfaces</td><td>rg-dev-app03</td><td>uksouth</td>
+          <td>Contoso-NonProduction</td><td></td>
+          <td class="muted">environment=dev</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app03/providers/Microsoft.Compute/virtualMachines/vm-dev-002">vm-dev-002</td><td>Virtual machines</td><td>rg-dev-app03</td><td>eastus</td>
+          <td>Contoso-NonProduction</td><td></td>
+          <td class="muted">environment=dev, owner=platform, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app03/providers/Microsoft.Compute/disks/vm-dev-002_OsDisk">vm-dev-002_OsDisk</td><td>Managed disks</td><td>rg-dev-app03</td><td>eastus</td>
+          <td>Contoso-NonProduction</td><td>Premium_LRS</td>
+          <td class="muted">environment=dev, owner=platform, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app03/providers/Microsoft.Compute/virtualMachines/vm-dev-006">vm-dev-006</td><td>Virtual machines</td><td>rg-dev-app03</td><td>uksouth</td>
+          <td>Contoso-NonProduction</td><td></td>
+          <td class="muted"></td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app03/providers/Microsoft.Compute/disks/vm-dev-006_OsDisk">vm-dev-006_OsDisk</td><td>Managed disks</td><td>rg-dev-app03</td><td>uksouth</td>
+          <td>Contoso-NonProduction</td><td>Premium_LRS</td>
+          <td class="muted">environment=dev, owner=platform, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app04/providers/Microsoft.Network/networkInterfaces/nic-dev-003">nic-dev-003</td><td>Network interfaces</td><td>rg-dev-app04</td><td>eastus</td>
+          <td>Contoso-NonProduction</td><td></td>
+          <td class="muted">environment=dev, owner=data-team, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app04/providers/Microsoft.Network/networkInterfaces/nic-dev-007">nic-dev-007</td><td>Network interfaces</td><td>rg-dev-app04</td><td>eastus</td>
+          <td>Contoso-NonProduction</td><td></td>
+          <td class="muted">environment=dev, owner=app-team, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app04/providers/Microsoft.Compute/virtualMachines/vm-dev-003">vm-dev-003</td><td>Virtual machines</td><td>rg-dev-app04</td><td>eastus</td>
+          <td>Contoso-NonProduction</td><td></td>
+          <td class="muted">environment=dev</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app04/providers/Microsoft.Compute/disks/vm-dev-003_OsDisk">vm-dev-003_OsDisk</td><td>Managed disks</td><td>rg-dev-app04</td><td>eastus</td>
+          <td>Contoso-NonProduction</td><td>Premium_LRS</td>
+          <td class="muted"></td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app04/providers/Microsoft.Compute/virtualMachines/vm-dev-007">vm-dev-007</td><td>Virtual machines</td><td>rg-dev-app04</td><td>eastus</td>
+          <td>Contoso-NonProduction</td><td></td>
+          <td class="muted">environment=dev, owner=platform, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-app04/providers/Microsoft.Compute/disks/vm-dev-007_OsDisk">vm-dev-007_OsDisk</td><td>Managed disks</td><td>rg-dev-app04</td><td>eastus</td>
+          <td>Contoso-NonProduction</td><td>Premium_LRS</td>
+          <td class="muted">environment=dev, owner=app-team, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-data/providers/Microsoft.Sql/servers/sql-dev-01">sql-dev-01</td><td>SQL servers</td><td>rg-dev-data</td><td>uksouth</td>
+          <td>Contoso-NonProduction</td><td></td>
+          <td class="muted">owner=data-team</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-data/providers/Microsoft.Sql/servers/databases/sql-dev-01/db0">sql-dev-01/db0</td><td>SQL databases</td><td>rg-dev-data</td><td>westeurope</td>
+          <td>Contoso-NonProduction</td><td>Basic</td>
+          <td class="muted">environment=dev, owner=app-team, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-data/providers/Microsoft.Sql/servers/databases/sql-dev-01/db1">sql-dev-01/db1</td><td>SQL databases</td><td>rg-dev-data</td><td>uksouth</td>
+          <td>Contoso-NonProduction</td><td>S1</td>
+          <td class="muted">environment=dev, owner=app-team, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-data/providers/Microsoft.Sql/servers/databases/sql-dev-01/db2">sql-dev-01/db2</td><td>SQL databases</td><td>rg-dev-data</td><td>westeurope</td>
+          <td>Contoso-NonProduction</td><td>S1</td>
+          <td class="muted">environment=dev, owner=data-team, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-data/providers/Microsoft.Storage/storageAccounts/stdevdata00">stdevdata00</td><td>Storage accounts</td><td>rg-dev-data</td><td>westeurope</td>
+          <td>Contoso-NonProduction</td><td>Standard_GRS</td>
+          <td class="muted">environment=dev, owner=data-team, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-data/providers/Microsoft.Storage/storageAccounts/stdevdata01">stdevdata01</td><td>Storage accounts</td><td>rg-dev-data</td><td>eastus</td>
+          <td>Contoso-NonProduction</td><td>Standard_GRS</td>
+          <td class="muted">environment=dev, owner=app-team, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-data/providers/Microsoft.Storage/storageAccounts/stdevdata02">stdevdata02</td><td>Storage accounts</td><td>rg-dev-data</td><td>westeurope</td>
+          <td>Contoso-NonProduction</td><td>Standard_LRS</td>
+          <td class="muted"></td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-data/providers/Microsoft.Storage/storageAccounts/stdevdata03">stdevdata03</td><td>Storage accounts</td><td>rg-dev-data</td><td>westeurope</td>
+          <td>Contoso-NonProduction</td><td>Standard_ZRS</td>
+          <td class="muted">environment=dev, owner=platform, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-data/providers/Microsoft.Storage/storageAccounts/stdevdata04">stdevdata04</td><td>Storage accounts</td><td>rg-dev-data</td><td>westeurope</td>
+          <td>Contoso-NonProduction</td><td>Standard_GRS</td>
+          <td class="muted">environment=dev, owner=app-team, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-mon/providers/Microsoft.OperationalInsights/workspaces/log-dev-01">log-dev-01</td><td>Log Analytics workspaces</td><td>rg-dev-mon</td><td>uksouth</td>
+          <td>Contoso-NonProduction</td><td></td>
+          <td class="muted">environment=dev, owner=platform, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-network/providers/Microsoft.Network/virtualNetworks/vnet-dev-eastus">vnet-dev-eastus</td><td>Virtual networks</td><td>rg-dev-network</td><td>eastus</td>
+          <td>Contoso-NonProduction</td><td></td>
+          <td class="muted">environment=dev, owner=data-team, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-sandbox/providers/Microsoft.Network/virtualNetworks/vnet-dev-sandbox">vnet-dev-sandbox</td><td>Virtual networks</td><td>rg-dev-sandbox</td><td>uksouth</td>
+          <td>Contoso-NonProduction</td><td></td>
+          <td class="muted">environment=dev, owner=app-team, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-sec/providers/Microsoft.KeyVault/vaults/kv-dev-00">kv-dev-00</td><td>Key vaults</td><td>rg-dev-sec</td><td>westeurope</td>
+          <td>Contoso-NonProduction</td><td></td>
+          <td class="muted">environment=dev, owner=platform, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-sec/providers/Microsoft.KeyVault/vaults/kv-dev-01">kv-dev-01</td><td>Key vaults</td><td>rg-dev-sec</td><td>eastus</td>
+          <td>Contoso-NonProduction</td><td></td>
+          <td class="muted">environment=dev, owner=platform, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-web/providers/Microsoft.Web/sites/app-dev-00">app-dev-00</td><td>App Services</td><td>rg-dev-web</td><td>westeurope</td>
+          <td>Contoso-NonProduction</td><td></td>
+          <td class="muted">environment=dev, owner=platform, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-web/providers/Microsoft.Web/sites/app-dev-01">app-dev-01</td><td>App Services</td><td>rg-dev-web</td><td>eastus</td>
+          <td>Contoso-NonProduction</td><td></td>
+          <td class="muted">environment=dev, owner=data-team, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-web/providers/Microsoft.Web/sites/app-dev-02">app-dev-02</td><td>App Services</td><td>rg-dev-web</td><td>eastus</td>
+          <td>Contoso-NonProduction</td><td></td>
+          <td class="muted">environment=dev, owner=platform, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-web/providers/Microsoft.Web/sites/app-dev-03">app-dev-03</td><td>App Services</td><td>rg-dev-web</td><td>uksouth</td>
+          <td>Contoso-NonProduction</td><td></td>
+          <td class="muted">environment=dev, owner=platform, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-web/providers/Microsoft.Web/serverFarms/asp-dev-00">asp-dev-00</td><td>App Service plans</td><td>rg-dev-web</td><td>eastus</td>
+          <td>Contoso-NonProduction</td><td>S1</td>
+          <td class="muted">costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-dev-web/providers/Microsoft.Web/serverFarms/asp-dev-01">asp-dev-01</td><td>App Service plans</td><td>rg-dev-web</td><td>eastus</td>
+          <td>Contoso-NonProduction</td><td>B1</td>
+          <td class="muted">costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app01/providers/Microsoft.Compute/disks/disk-prd-orphan-0">disk-prd-orphan-0</td><td>Managed disks</td><td>rg-prd-app01</td><td>uksouth</td>
+          <td>Contoso-Production</td><td>StandardSSD_LRS</td>
+          <td class="muted">environment=prod, owner=data-team, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app01/providers/Microsoft.Compute/disks/disk-prd-orphan-1">disk-prd-orphan-1</td><td>Managed disks</td><td>rg-prd-app01</td><td>westeurope</td>
+          <td>Contoso-Production</td><td>Premium_LRS</td>
+          <td class="muted">environment=prod, owner=app-team, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app01/providers/Microsoft.Compute/disks/disk-prd-orphan-2">disk-prd-orphan-2</td><td>Managed disks</td><td>rg-prd-app01</td><td>eastus</td>
+          <td>Contoso-Production</td><td>Premium_LRS</td>
+          <td class="muted">environment=prod, owner=platform, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app01/providers/Microsoft.Compute/disks/disk-prd-orphan-3">disk-prd-orphan-3</td><td>Managed disks</td><td>rg-prd-app01</td><td>centralindia</td>
+          <td>Contoso-Production</td><td>Premium_LRS</td>
+          <td class="muted">environment=prod, owner=app-team</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app01/providers/Microsoft.Compute/disks/disk-prd-orphan-4">disk-prd-orphan-4</td><td>Managed disks</td><td>rg-prd-app01</td><td>eastus</td>
+          <td>Contoso-Production</td><td>StandardSSD_LRS</td>
+          <td class="muted">environment=prod, owner=app-team, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app01/providers/Microsoft.Compute/disks/disk-prd-orphan-5">disk-prd-orphan-5</td><td>Managed disks</td><td>rg-prd-app01</td><td>westeurope</td>
+          <td>Contoso-Production</td><td>Premium_LRS</td>
+          <td class="muted">environment=prod, owner=data-team, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app01/providers/Microsoft.Network/loadBalancers/lbi-prd-app">lbi-prd-app</td><td>Load balancers</td><td>rg-prd-app01</td><td>eastus</td>
+          <td>Contoso-Production</td><td>Standard</td>
+          <td class="muted">environment=prod, owner=app-team, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app01/providers/Microsoft.Network/networkInterfaces/nic-prd-000">nic-prd-000</td><td>Network interfaces</td><td>rg-prd-app01</td><td>westeurope</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=platform, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app01/providers/Microsoft.Network/networkInterfaces/nic-prd-004">nic-prd-004</td><td>Network interfaces</td><td>rg-prd-app01</td><td>westeurope</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=platform, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app01/providers/Microsoft.Network/networkInterfaces/nic-prd-008">nic-prd-008</td><td>Network interfaces</td><td>rg-prd-app01</td><td>uksouth</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=app-team, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app01/providers/Microsoft.Network/networkInterfaces/nic-prd-012">nic-prd-012</td><td>Network interfaces</td><td>rg-prd-app01</td><td>centralindia</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=data-team, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app01/providers/Microsoft.Compute/virtualMachines/vm-prd-000">vm-prd-000</td><td>Virtual machines</td><td>rg-prd-app01</td><td>westeurope</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=app-team, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app01/providers/Microsoft.Compute/disks/vm-prd-000_OsDisk">vm-prd-000_OsDisk</td><td>Managed disks</td><td>rg-prd-app01</td><td>westeurope</td>
+          <td>Contoso-Production</td><td>Premium_LRS</td>
+          <td class="muted"></td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app01/providers/Microsoft.Compute/virtualMachines/vm-prd-004">vm-prd-004</td><td>Virtual machines</td><td>rg-prd-app01</td><td>westeurope</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app01/providers/Microsoft.Compute/disks/vm-prd-004_OsDisk">vm-prd-004_OsDisk</td><td>Managed disks</td><td>rg-prd-app01</td><td>westeurope</td>
+          <td>Contoso-Production</td><td>Premium_LRS</td>
+          <td class="muted">environment=prod, owner=app-team, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app01/providers/Microsoft.Compute/virtualMachines/vm-prd-008">vm-prd-008</td><td>Virtual machines</td><td>rg-prd-app01</td><td>uksouth</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=platform, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app01/providers/Microsoft.Compute/disks/vm-prd-008_OsDisk">vm-prd-008_OsDisk</td><td>Managed disks</td><td>rg-prd-app01</td><td>uksouth</td>
+          <td>Contoso-Production</td><td>Premium_LRS</td>
+          <td class="muted">environment=prod, owner=platform, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app01/providers/Microsoft.Compute/virtualMachines/vm-prd-012">vm-prd-012</td><td>Virtual machines</td><td>rg-prd-app01</td><td>centralindia</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=platform, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app01/providers/Microsoft.Compute/disks/vm-prd-012_OsDisk">vm-prd-012_OsDisk</td><td>Managed disks</td><td>rg-prd-app01</td><td>centralindia</td>
+          <td>Contoso-Production</td><td>Premium_LRS</td>
+          <td class="muted">environment=prod, owner=app-team, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app02/providers/Microsoft.Network/networkInterfaces/nic-prd-001">nic-prd-001</td><td>Network interfaces</td><td>rg-prd-app02</td><td>eastus</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=data-team, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app02/providers/Microsoft.Network/networkInterfaces/nic-prd-005">nic-prd-005</td><td>Network interfaces</td><td>rg-prd-app02</td><td>eastus</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=app-team, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app02/providers/Microsoft.Network/networkInterfaces/nic-prd-009">nic-prd-009</td><td>Network interfaces</td><td>rg-prd-app02</td><td>eastus</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=platform, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app02/providers/Microsoft.Network/networkInterfaces/nic-prd-013">nic-prd-013</td><td>Network interfaces</td><td>rg-prd-app02</td><td>westeurope</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=data-team, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app02/providers/Microsoft.Compute/virtualMachines/vm-prd-001">vm-prd-001</td><td>Virtual machines</td><td>rg-prd-app02</td><td>eastus</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted"></td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app02/providers/Microsoft.Compute/disks/vm-prd-001_OsDisk">vm-prd-001_OsDisk</td><td>Managed disks</td><td>rg-prd-app02</td><td>eastus</td>
+          <td>Contoso-Production</td><td>Premium_LRS</td>
+          <td class="muted">environment=prod, owner=platform, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app02/providers/Microsoft.Compute/virtualMachines/vm-prd-005">vm-prd-005</td><td>Virtual machines</td><td>rg-prd-app02</td><td>eastus</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=platform, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app02/providers/Microsoft.Compute/disks/vm-prd-005_OsDisk">vm-prd-005_OsDisk</td><td>Managed disks</td><td>rg-prd-app02</td><td>eastus</td>
+          <td>Contoso-Production</td><td>Premium_LRS</td>
+          <td class="muted"></td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app02/providers/Microsoft.Compute/virtualMachines/vm-prd-009">vm-prd-009</td><td>Virtual machines</td><td>rg-prd-app02</td><td>eastus</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted"></td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app02/providers/Microsoft.Compute/disks/vm-prd-009_OsDisk">vm-prd-009_OsDisk</td><td>Managed disks</td><td>rg-prd-app02</td><td>eastus</td>
+          <td>Contoso-Production</td><td>Premium_LRS</td>
+          <td class="muted">environment=prod, owner=platform</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app02/providers/Microsoft.Compute/virtualMachines/vm-prd-013">vm-prd-013</td><td>Virtual machines</td><td>rg-prd-app02</td><td>westeurope</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=data-team, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app02/providers/Microsoft.Compute/disks/vm-prd-013_OsDisk">vm-prd-013_OsDisk</td><td>Managed disks</td><td>rg-prd-app02</td><td>westeurope</td>
+          <td>Contoso-Production</td><td>Premium_LRS</td>
+          <td class="muted"></td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app03/providers/Microsoft.Network/networkInterfaces/nic-prd-002">nic-prd-002</td><td>Network interfaces</td><td>rg-prd-app03</td><td>uksouth</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=platform, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app03/providers/Microsoft.Network/networkInterfaces/nic-prd-006">nic-prd-006</td><td>Network interfaces</td><td>rg-prd-app03</td><td>eastus</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app03/providers/Microsoft.Network/networkInterfaces/nic-prd-010">nic-prd-010</td><td>Network interfaces</td><td>rg-prd-app03</td><td>westeurope</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=app-team, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app03/providers/Microsoft.Compute/virtualMachines/vm-prd-002">vm-prd-002</td><td>Virtual machines</td><td>rg-prd-app03</td><td>uksouth</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=app-team, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app03/providers/Microsoft.Compute/disks/vm-prd-002_OsDisk">vm-prd-002_OsDisk</td><td>Managed disks</td><td>rg-prd-app03</td><td>uksouth</td>
+          <td>Contoso-Production</td><td>Premium_LRS</td>
+          <td class="muted">environment=prod, owner=data-team, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app03/providers/Microsoft.Compute/virtualMachines/vm-prd-006">vm-prd-006</td><td>Virtual machines</td><td>rg-prd-app03</td><td>eastus</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=app-team, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app03/providers/Microsoft.Compute/disks/vm-prd-006_OsDisk">vm-prd-006_OsDisk</td><td>Managed disks</td><td>rg-prd-app03</td><td>eastus</td>
+          <td>Contoso-Production</td><td>Premium_LRS</td>
+          <td class="muted">environment=prod, owner=data-team, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app03/providers/Microsoft.Compute/virtualMachines/vm-prd-010">vm-prd-010</td><td>Virtual machines</td><td>rg-prd-app03</td><td>westeurope</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted"></td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app03/providers/Microsoft.Compute/disks/vm-prd-010_OsDisk">vm-prd-010_OsDisk</td><td>Managed disks</td><td>rg-prd-app03</td><td>westeurope</td>
+          <td>Contoso-Production</td><td>Premium_LRS</td>
+          <td class="muted">environment=prod, owner=data-team, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app04/providers/Microsoft.Network/networkInterfaces/nic-prd-003">nic-prd-003</td><td>Network interfaces</td><td>rg-prd-app04</td><td>westeurope</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">owner=data-team</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app04/providers/Microsoft.Network/networkInterfaces/nic-prd-007">nic-prd-007</td><td>Network interfaces</td><td>rg-prd-app04</td><td>eastus</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=data-team, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app04/providers/Microsoft.Network/networkInterfaces/nic-prd-011">nic-prd-011</td><td>Network interfaces</td><td>rg-prd-app04</td><td>uksouth</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=platform, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app04/providers/Microsoft.Compute/virtualMachines/vm-prd-003">vm-prd-003</td><td>Virtual machines</td><td>rg-prd-app04</td><td>westeurope</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=app-team, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app04/providers/Microsoft.Compute/disks/vm-prd-003_OsDisk">vm-prd-003_OsDisk</td><td>Managed disks</td><td>rg-prd-app04</td><td>westeurope</td>
+          <td>Contoso-Production</td><td>Premium_LRS</td>
+          <td class="muted"></td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app04/providers/Microsoft.Compute/virtualMachines/vm-prd-007">vm-prd-007</td><td>Virtual machines</td><td>rg-prd-app04</td><td>eastus</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=app-team, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app04/providers/Microsoft.Compute/disks/vm-prd-007_OsDisk">vm-prd-007_OsDisk</td><td>Managed disks</td><td>rg-prd-app04</td><td>eastus</td>
+          <td>Contoso-Production</td><td>Premium_LRS</td>
+          <td class="muted"></td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app04/providers/Microsoft.Compute/virtualMachines/vm-prd-011">vm-prd-011</td><td>Virtual machines</td><td>rg-prd-app04</td><td>uksouth</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=app-team, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-app04/providers/Microsoft.Compute/disks/vm-prd-011_OsDisk">vm-prd-011_OsDisk</td><td>Managed disks</td><td>rg-prd-app04</td><td>uksouth</td>
+          <td>Contoso-Production</td><td>Premium_LRS</td>
+          <td class="muted">environment=prod, owner=data-team, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-data/providers/Microsoft.Sql/servers/sql-prd-01">sql-prd-01</td><td>SQL servers</td><td>rg-prd-data</td><td>centralindia</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=data-team, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-data/providers/Microsoft.Sql/servers/databases/sql-prd-01/db0">sql-prd-01/db0</td><td>SQL databases</td><td>rg-prd-data</td><td>eastus</td>
+          <td>Contoso-Production</td><td>GP_Gen5_2</td>
+          <td class="muted">environment=prod, owner=platform, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-data/providers/Microsoft.Sql/servers/databases/sql-prd-01/db1">sql-prd-01/db1</td><td>SQL databases</td><td>rg-prd-data</td><td>eastus</td>
+          <td>Contoso-Production</td><td>S1</td>
+          <td class="muted">environment=prod, owner=app-team, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-data/providers/Microsoft.Sql/servers/databases/sql-prd-01/db2">sql-prd-01/db2</td><td>SQL databases</td><td>rg-prd-data</td><td>eastus</td>
+          <td>Contoso-Production</td><td>Basic</td>
+          <td class="muted">environment=prod, owner=app-team, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-data/providers/Microsoft.Storage/storageAccounts/stprddata00">stprddata00</td><td>Storage accounts</td><td>rg-prd-data</td><td>centralindia</td>
+          <td>Contoso-Production</td><td>Standard_LRS</td>
+          <td class="muted">environment=prod, owner=app-team, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-data/providers/Microsoft.Storage/storageAccounts/stprddata01">stprddata01</td><td>Storage accounts</td><td>rg-prd-data</td><td>westeurope</td>
+          <td>Contoso-Production</td><td>Standard_GRS</td>
+          <td class="muted">environment=prod, owner=app-team, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-data/providers/Microsoft.Storage/storageAccounts/stprddata02">stprddata02</td><td>Storage accounts</td><td>rg-prd-data</td><td>centralindia</td>
+          <td>Contoso-Production</td><td>Standard_ZRS</td>
+          <td class="muted">environment=prod, owner=data-team, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-data/providers/Microsoft.Storage/storageAccounts/stprddata03">stprddata03</td><td>Storage accounts</td><td>rg-prd-data</td><td>eastus</td>
+          <td>Contoso-Production</td><td>Standard_ZRS</td>
+          <td class="muted">environment=prod, owner=data-team, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-data/providers/Microsoft.Storage/storageAccounts/stprddata04">stprddata04</td><td>Storage accounts</td><td>rg-prd-data</td><td>eastus</td>
+          <td>Contoso-Production</td><td>Standard_LRS</td>
+          <td class="muted">costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-mon/providers/Microsoft.OperationalInsights/workspaces/log-prd-01">log-prd-01</td><td>Log Analytics workspaces</td><td>rg-prd-mon</td><td>eastus</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=app-team, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-network/providers/Microsoft.Network/networkSecurityGroups/nsg-prd-app">nsg-prd-app</td><td>Network security groups</td><td>rg-prd-network</td><td>eastus</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=app-team, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-network/providers/Microsoft.Network/networkSecurityGroups/nsg-prd-data">nsg-prd-data</td><td>Network security groups</td><td>rg-prd-network</td><td>eastus</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=app-team, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-network/providers/Microsoft.Network/networkSecurityGroups/nsg-prd-web">nsg-prd-web</td><td>Network security groups</td><td>rg-prd-network</td><td>eastus</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=data-team, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-network/providers/Microsoft.Network/privateEndpoints/pe-sql-prd-01">pe-sql-prd-01</td><td>privateendpoints</td><td>rg-prd-network</td><td>eastus</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=data-team, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-network/providers/Microsoft.Network/privateEndpoints/pe-stprddata00-blob">pe-stprddata00-blob</td><td>privateendpoints</td><td>rg-prd-network</td><td>eastus</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=platform, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-network/providers/Microsoft.Network/routeTables/rt-prd-eastus">rt-prd-eastus</td><td>routetables</td><td>rg-prd-network</td><td>eastus</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=platform, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-network/providers/Microsoft.Network/routeTables/rt-prd-weu">rt-prd-weu</td><td>routetables</td><td>rg-prd-network</td><td>westeurope</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=platform, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-network/providers/Microsoft.Network/virtualNetworks/vnet-prd-eastus">vnet-prd-eastus</td><td>Virtual networks</td><td>rg-prd-network</td><td>eastus</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=platform, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-network/providers/Microsoft.Network/virtualNetworks/vnet-prd-westeurope">vnet-prd-westeurope</td><td>Virtual networks</td><td>rg-prd-network</td><td>westeurope</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=platform, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-sec/providers/Microsoft.KeyVault/vaults/kv-prd-00">kv-prd-00</td><td>Key vaults</td><td>rg-prd-sec</td><td>eastus</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted"></td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-sec/providers/Microsoft.KeyVault/vaults/kv-prd-01">kv-prd-01</td><td>Key vaults</td><td>rg-prd-sec</td><td>westeurope</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=app-team</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-web/providers/Microsoft.Network/applicationGateways/agw-prd-eastus">agw-prd-eastus</td><td>Application gateways</td><td>rg-prd-web</td><td>eastus</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=platform, costCenter=CC100</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-web/providers/Microsoft.Web/sites/app-prd-00">app-prd-00</td><td>App Services</td><td>rg-prd-web</td><td>eastus</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=app-team, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-web/providers/Microsoft.Web/sites/app-prd-01">app-prd-01</td><td>App Services</td><td>rg-prd-web</td><td>eastus</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-web/providers/Microsoft.Web/sites/app-prd-02">app-prd-02</td><td>App Services</td><td>rg-prd-web</td><td>westeurope</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=platform, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-web/providers/Microsoft.Web/sites/app-prd-03">app-prd-03</td><td>App Services</td><td>rg-prd-web</td><td>eastus</td>
+          <td>Contoso-Production</td><td></td>
+          <td class="muted">environment=prod, owner=data-team, costCenter=CC200</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-web/providers/Microsoft.Web/serverFarms/asp-prd-00">asp-prd-00</td><td>App Service plans</td><td>rg-prd-web</td><td>westeurope</td>
+          <td>Contoso-Production</td><td>P1v3</td>
+          <td class="muted">environment=prod, owner=data-team, costCenter=CC300</td></tr>
+      
+        <tr><td title="/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-prd-web/providers/Microsoft.Web/serverFarms/asp-prd-01">asp-prd-01</td><td>App Service plans</td><td>rg-prd-web</td><td>westeurope</td>
+          <td>Contoso-Production</td><td>P1v3</td>
+          <td class="muted">environment=prod, owner=app-team, costCenter=CC300</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+</main>
+<footer>Contoso · Azure Environment Assessment · Confidential</footer>
+<script>
+(function () {
+  // Theme toggle (remembered per viewer when storage is available)
+  var root = document.documentElement, btn = document.getElementById('theme');
+  try { var saved = localStorage.getItem('aa-theme'); if (saved) root.dataset.theme = saved; } catch (e) {}
+  btn.addEventListener('click', function () {
+    var dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+    root.dataset.theme = dark ? 'light' : 'dark';
+    try { localStorage.setItem('aa-theme', root.dataset.theme); } catch (e) {}
+  });
+  // Table filters
+  document.querySelectorAll('.filters').forEach(function (f) {
+    var table = document.getElementById(f.dataset.for), q = f.querySelector('input'), sels = f.querySelectorAll('select');
+    function apply() {
+      var term = q.value.toLowerCase();
+      table.querySelectorAll('tbody tr').forEach(function (tr) {
+        var ok = !term || tr.textContent.toLowerCase().indexOf(term) !== -1;
+        sels.forEach(function (s) { if (s.value && tr.cells[+s.dataset.col].textContent.trim() !== s.value) ok = false; });
+        tr.style.display = ok ? '' : 'none';
+      });
+    }
+    q.addEventListener('input', apply); sels.forEach(function (s) { s.addEventListener('change', apply); });
+  });
+  // Click-to-sort headers
+  document.querySelectorAll('table.sortable th').forEach(function (th, i) {
+    th.addEventListener('click', function () {
+      var tb = th.closest('table').tBodies[0], asc = th.dataset.dir !== 'asc';
+      th.parentNode.querySelectorAll('th').forEach(function (h) { delete h.dataset.dir; });
+      th.dataset.dir = asc ? 'asc' : 'desc';
+      Array.from(tb.rows).sort(function (a, b) {
+        var x = a.cells[th.cellIndex].textContent.trim(), y = b.cells[th.cellIndex].textContent.trim();
+        return (asc ? 1 : -1) * x.localeCompare(y, undefined, { numeric: true });
+      }).forEach(function (r) { tb.appendChild(r); });
+    });
+  });
+})();
+</script>
+</body>
+</html>
