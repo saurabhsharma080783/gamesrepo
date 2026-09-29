@@ -24,7 +24,8 @@ only while a report is being drafted, and stops afterwards.
 
 The VM is only needed for about an hour per engagement:
 
-* **CPU only.** Size `Standard_D16s_v5` by default; a report took about 25 minutes on 4 vCPUs in testing,
+* **CPU only.** Size `Standard_D16s_v5` by default (`Standard_B4ms`, 4 vCPU and 16 GB, is enough for a trial
+  but slow for a full report once its burst credits run out); a report took about 25 minutes on 4 vCPUs in testing,
   and more cores are faster.
 * **Deallocates itself.** Use `assess-run ... --deallocate` to stop billing when the report is done. If
   the VM is left running, a timer deallocates it after 60 idle minutes (nobody logged in and no report
@@ -67,7 +68,10 @@ managed identity with the Virtual Machine Contributor role on itself; otherwise 
    packer build -var subscription_id=<our-sub> -var image_version=1.0.0 deploy/appliance/packer
    ```
 
-The build (about 20 to 30 minutes) creates a temporary VM and runs `scripts/10` to `scripts/90`. The
+The build creates a temporary VM (`build_vm_size`: `Standard_D8s_v5` takes about 20 to 30 minutes;
+`Standard_B4ms` is cheaper but slower, since burstable VMs throttle under sustained load). The VM needs
+vCPU quota for its family in the build region: a new subscription often has 0, so request it under
+**Quotas → Compute** first. The build and runs `scripts/10` to `scripts/90`. The
 self-test builds a report and checks that the model answers; if either fails, no image is published.
 For an offline build, pass `-var model_file=/path/model.gguf -var model_source=file:/tmp/model/model.gguf`.
 
