@@ -32,6 +32,8 @@ LOCAL_URL = "http://127.0.0.1:8080/v1"
 IMDS = os.environ.get("ASSESS_IMDS", "http://169.254.169.254")
 ARM = os.environ.get("ASSESS_ARM", "https://management.azure.com")
 COMPUTE_API = "2024-07-01"
+# Loading the model reads ~5 GB from disk; on a freshly started VM (cold disk) that can take several minutes.
+MODEL_START_TIMEOUT = float(os.environ.get("ASSESS_MODEL_START_TIMEOUT", "900"))
 
 
 class ApplianceError(RuntimeError):
@@ -86,7 +88,8 @@ def _llm_settings() -> dict:
         raise ApplianceError(f"cannot read {ETC / 'llm.json'}: {exc}") from exc
 
 
-def wait_for_server(url: str, timeout: float = 300) -> None:
+def wait_for_server(url: str, timeout: float | None = None) -> None:
+    timeout = MODEL_START_TIMEOUT if timeout is None else timeout
     deadline = time.monotonic() + timeout
     while True:
         try:
@@ -142,7 +145,7 @@ def run_main(argv: list[str] | None = None) -> int:
     rc = 1
     try:
         if local:
-            print("Starting the local model (this can take a minute) ...")
+            print("Starting the local model (loading it can take a few minutes on a freshly started VM) ...")
             _systemctl("start", LLM_UNIT)
             wait_for_server(_llm_settings().get("url", LOCAL_URL))
         rc = assess_main(cmd)
