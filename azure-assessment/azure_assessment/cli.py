@@ -33,14 +33,37 @@ def customer_slug(customer: str) -> str:
     return "-".join(filter(None, slug.split("-"))) or "azure"
 
 
+def _ai_draft(a, llm, workers: int):
+    """Draft narrative with the LLM; on any server problem, warn and keep the standard wording."""
+    from . import ai
+
+    try:
+        llm.check()
+    except ai.LLMError as exc:
+        print(f"warning: AI narrative skipped, standard wording used: {exc}", file=sys.stderr)
+        return None
+    print(f"Drafting narrative with {llm.model} at {llm.base_url} ...")
+    d = ai.draft(a, llm, workers=workers, progress=lambda p: print(
+        f"  {'AI      ' if p.status == 'ai' else 'standard'} {p.title}" + (f"  ({p.reason})" if p.reason else "")))
+    print(f"AI drafted {d.drafted} of {len(d.parts)} narrative parts; the rest keep the standard wording.")
+    return d
+
+
 def generate_reports(inventory: Inventory, out_dir: Path, customer: str, formats=DEFAULT_FORMATS,
-                     config: dict | None = None) -> dict[str, Path]:
+                     config: dict | None = None, llm=None, ai_workers: int = 2) -> dict[str, Path]:
     from .reports import charts, html_report, ppt_report, word_report
 
     a = assess(inventory, config, customer)
     out_dir.mkdir(parents=True, exist_ok=True)
     base = f"{customer_slug(customer)}-azure-assessment"
     written: dict[str, Path] = {}
+    if llm is not None:
+        a.ai_draft = _ai_draft(a, llm, ai_workers)
+        if a.ai_draft is not None:
+            # Kept next to the reports for review, and as facts -> text pairs for later fine-tuning.
+            draft_path = out_dir / f"{base}-ai-draft.json"
+            draft_path.write_text(json.dumps(a.ai_draft.to_dict(), indent=2))
+            written["ai-draft"] = draft_path
     with tempfile.TemporaryDirectory() as tmp:
         imgs = charts.render_all(a, Path(tmp)) if {"docx", "pptx"} & set(formats) else {}
         if "html" in formats:
@@ -74,6 +97,14 @@ def main(argv: list[str] | None = None) -> int:
                        help="Comma list of docx,html,pptx (default: docx,html)")
         p.add_argument("--config", help="JSON file overriding assessment settings (see examples/config.json)")
         p.add_argument("--inventory-date", help="Date the customer exported the inventory (shown on the reports)")
+        g = p.add_argument_group("AI narrative (self-hosted open-source LLM, see docs/AI-NARRATIVE.md)")
+        g.add_argument("--ai", action="store_true",
+                       help="Draft the executive summary and section narrative with a language model")
+        g.add_argument("--llm-url", help="OpenAI-compatible API base URL (default: $AZURE_ASSESS_LLM_URL or "
+                                         "http://localhost:11434/v1, i.e. Ollama)")
+        g.add_argument("--llm-model", help="Model name (default: $AZURE_ASSESS_LLM_MODEL or qwen2.5:7b-instruct)")
+        g.add_argument("--llm-timeout", type=float, default=180, help="Seconds per request (default: 180)")
+        g.add_argument("--llm-workers", type=int, default=2, help="Parallel requests (default: 2)")
 
     p = sub.add_parser("report", help="Build reports from customer inventory file(s)")
     p.add_argument("inputs", nargs="+", metavar="FILE", help="Inventory export(s): .csv or .json; several are merged")
@@ -120,7 +151,12 @@ def main(argv: list[str] | None = None) -> int:
         inv.collected_at = args.inventory_date
 
     out_dir = Path(args.out) if args.out else REPORTS_DIR
-    written = generate_reports(inv, out_dir, args.customer, formats, _load_config(args.config))
+    llm = None
+    if args.ai:
+        from .ai import OpenAICompatibleClient
+        llm = OpenAICompatibleClient(args.llm_url, args.llm_model, timeout=args.llm_timeout)
+    written = generate_reports(inv, out_dir, args.customer, formats, _load_config(args.config),
+                               llm=llm, ai_workers=args.llm_workers)
     for kind, path in written.items():
         print(f"  {kind:8s} {path}")
     return 0

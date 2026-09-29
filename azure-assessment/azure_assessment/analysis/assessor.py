@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
+from typing import Any
 
 from ..models import PILLARS, SEVERITY_ORDER, SEVERITY_WEIGHT, Finding, Inventory
 from .rules import RULES, Rule
@@ -95,6 +96,7 @@ class Assessment:
     config: dict
     customer: str = "Customer"
     coverage_gaps: list[CoverageGap] = field(default_factory=list)
+    ai_draft: Any = None   # ai.AIDraft when narrative was drafted by a language model (--ai)
 
     # --- convenience aggregates ------------------------------------------
     @property

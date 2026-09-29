@@ -1,0 +1,38 @@
+# Self-hosted open-source LLM for azure-assess --ai.
+#
+#   docker compose -f deploy/llm/docker-compose.yml up -d
+#   azure-assess demo --ai          # uses http://localhost:11434/v1 and qwen2.5:7b-instruct
+#
+# Choose another model with LLM_MODEL=llama3.1:8b docker compose ... up -d, and pass the same
+# name to --llm-model. The API listens on localhost only; nothing leaves this machine.
+services:
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "127.0.0.1:11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+    environment:
+      OLLAMA_KEEP_ALIVE: 30m          # keep the model loaded between report runs
+      OLLAMA_NUM_PARALLEL: 2          # matches azure-assess --llm-workers default
+      OLLAMA_CONTEXT_LENGTH: 8192     # prompts are ~1,500 tokens plus up to 900 for the reply
+    restart: unless-stopped
+    # NVIDIA GPU (recommended): install the NVIDIA Container Toolkit, then uncomment.
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+  pull-model:                         # one-off: downloads the model weights into the volume
+    image: ollama/ollama:latest
+    depends_on: [ollama]
+    environment:
+      OLLAMA_HOST: ollama:11434
+    entrypoint: ["ollama", "pull", "${LLM_MODEL:-qwen2.5:7b-instruct}"]
+    restart: "no"
+
+volumes:
+  ollama: {}

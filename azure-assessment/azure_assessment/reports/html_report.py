@@ -32,7 +32,7 @@ def build(a: Assessment, out: Path) -> Path:
 
     html = tpl.render(
         sections=sections, described_in=described_in, arch=arch, topology_svg=diagram.render_svg(arch.topology),
-        a=a, pillars=PILLARS, sev_colors=SEVERITY_COLORS,
+        a=a, ai=a.ai_draft, pillars=PILLARS, sev_colors=SEVERITY_COLORS,
         generated=datetime.now().strftime("%d %B %Y %H:%M"),
         by_type=bars(a.by_type(12)), by_region=bars(a.by_location(12)), by_sub=bars(a.by_subscription(12)),
         resources=sorted(a.inventory.resources, key=lambda r: (r.subscription_name, r.resource_group.lower(), r.name)),

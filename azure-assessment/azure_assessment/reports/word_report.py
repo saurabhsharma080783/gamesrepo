@@ -143,7 +143,14 @@ def _footer(section, text):
         r.font.color.rgb = _rgb(INK_2)
 
 
+def _ai_mark(doc):
+    p = doc.add_paragraph()
+    r = p.add_run("AI-drafted narrative, grounded in the assessment facts (see 2. Scope and methodology).")
+    r.italic, r.font.size, r.font.color.rgb = True, Pt(8), _rgb(INK_2)
+
+
 def build(a: Assessment, charts: dict[str, Path], out: Path) -> Path:
+    ai = a.ai_draft
     doc = Document()
     _setup_styles(doc)
     sec = doc.sections[0]
@@ -211,6 +218,10 @@ def build(a: Assessment, charts: dict[str, Path], out: Path) -> Path:
         rl = pl.add_run(label)
         rl.font.size, rl.font.color.rgb = Pt(8.5), _rgb(INK_2)
     doc.add_paragraph()
+    if ai and ai.executive():
+        for para in ai.executive():
+            doc.add_paragraph(para)
+        _ai_mark(doc)
 
     arch = architecture.analyse(a)
     doc.add_heading("Key observations", level=2)
@@ -249,6 +260,10 @@ def build(a: Assessment, charts: dict[str, Path], out: Path) -> Path:
         _table(doc, ["Rule", "Check", "Pillar", "Data needed", "Not assessed"],
                [(g.rule.id, g.rule.title, g.rule.pillar, g.missing, f"{g.skipped} of {g.applicable}")
                 for g in a.coverage_gaps], widths=[1.8, 6.5, 3, 2.5, 2.5])
+
+    if ai:
+        doc.add_heading("Use of AI in this report", level=2)
+        doc.add_paragraph(ai.note)
 
     finding_ref = narrative.pillar_section_numbers("6")
 
@@ -296,8 +311,11 @@ def build(a: Assessment, charts: dict[str, Path], out: Path) -> Path:
         pr.bold, pr.font.color.rgb = True, _rgb(ACCENT)
         cr = pp.add_run(f"   (confidence: {d.confidence})")
         cr.italic, cr.font.color.rgb = True, _rgb(INK_2)
-        for para in d.summary:
+        drafted = ai.architecture(d.key) if ai else []
+        for para in drafted or d.summary:
             doc.add_paragraph(para)
+        if drafted:
+            _ai_mark(doc)
         if d.key == "network":
             png = diagram.render_png(arch.topology, Path(charts["pillars"]).parent / "topology.png")
             if png:
@@ -330,8 +348,11 @@ def build(a: Assessment, charts: dict[str, Path], out: Path) -> Path:
     for i, ns in enumerate(sections, 1):
         num = f"4.{i}"
         doc.add_heading(f"{num} {ns.title}", level=2)
-        for para in ns.paragraphs:
+        drafted = ai.section(ns.key) if ai else []
+        for para in drafted or ns.paragraphs:
             doc.add_paragraph(para)
+        if drafted:
+            _ai_mark(doc)
         for b in ns.bullets:
             name, _, rest = b.partition(": ")
             bp = doc.add_paragraph(style="List Bullet")
