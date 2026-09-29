@@ -49,9 +49,10 @@ def executive(a: Assessment, arch: Architecture) -> str:
                      f"({', '.join(a.config.get('required_tags') or [])}).")
     lines.append("Architecture patterns identified:")
     lines += [f"- {d.title}: {d.pattern} (confidence {d.confidence})" for d in arch.dimensions]
+    # No rule IDs here: leadership text names issues, and any ID the model writes is then caught as invented.
     lines.append("Issues, most severe first:")
     for s in a.top_rules(10):
-        lines.append(f"- {s.rule.id} {s.rule.title} ({s.rule.pillar}, {s.rule.severity}): {s.affected} of "
+        lines.append(f"- {s.rule.title} ({s.rule.pillar}, {s.rule.severity}): {s.affected} of "
                      f"{s.evaluated} evaluated resources. Recommendation: {s.rule.recommendation}")
     lines.append("Remediation roadmap:")
     for bucket, rules in a.roadmap().items():

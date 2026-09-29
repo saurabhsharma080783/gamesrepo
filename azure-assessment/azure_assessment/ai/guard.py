@@ -9,6 +9,11 @@ _MD = re.compile(r"^\s*(?:#{1,6}\s+|[-*•]\s+|\d+[.)]\s+)")
 _PREAMBLE = re.compile(r"^(here is|here's|sure|certainly|below is)\b", re.I)
 
 
+def _is_heading(para: str) -> bool:
+    """'Significant Risks and Their Business Impact': short, no sentence punctuation."""
+    return len(para.split()) <= 8 and not para.rstrip().endswith((".", "!", "?", ":", ";"))
+
+
 def _norm(n: str) -> str:
     n = n.replace(",", "").rstrip(".")
     if "." in n:
@@ -23,12 +28,13 @@ def numbers(text: str) -> set[str]:
 def clean(text: str) -> list[str]:
     """Normalise model output into paragraphs, dropping markdown and chatty preambles."""
     text = re.sub(r"<think>.*?</think>", "", text, flags=re.S)       # reasoning models
-    text = text.replace("**", "").replace("__", "")
+    text = text.replace("**", "").replace("__", "").replace("`", "")
     paras = []
     for block in re.split(r"\n\s*\n", text.strip()):
         lines = [_MD.sub("", ln).strip() for ln in block.splitlines()]
         para = " ".join(ln for ln in lines if ln)
-        if para and not (len(paras) == 0 and _PREAMBLE.match(para) and para.endswith(":")):
+        if para and not (len(lines) == 1 and _is_heading(para)) and not (len(paras) == 0 and _PREAMBLE.match(para)
+                                                   and para.endswith(":")):
             paras.append(para)
     return paras
 

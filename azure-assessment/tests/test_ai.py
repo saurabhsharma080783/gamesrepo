@@ -39,6 +39,18 @@ def test_guard_rejects_ungrounded_text(text, problem):
 def test_guard_cleans_markdown_and_preamble():
     paras = guard.clean("Here is the summary:\n\n## Overview\n**Bold** text here.\n\n- first point\n- second")
     assert paras == ["Overview Bold text here.", "first point second"]
+    # plain-text headings, as Qwen 2.5 7B produced in the executive summary dry run
+    paras = guard.clean("Executive Summary\n\nThe estate is sound.\n\nWhat Is Working Well\n\nTagging is good.")
+    assert paras == ["The estate is sound.", "Tagging is good."]
+    assert guard.clean("Set `allowBlobPublicAccess` to false.") == ["Set allowBlobPublicAccess to false."]
+
+
+def test_executive_facts_have_no_rule_ids():
+    from azure_assessment.ai import facts
+    from azure_assessment.analysis import architecture
+    a = assess(sample.build(), customer="Contoso")
+    sheet = facts.executive(a, architecture.analyse(a))
+    assert "Storage account allows anonymous blob access" in sheet and not guard.RULE_ID.search(sheet)
 
 
 class _Scripted:
