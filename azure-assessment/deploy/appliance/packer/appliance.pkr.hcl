@@ -57,7 +57,7 @@ variable "replication_regions" {
 variable "build_vm_size" {
   type        = string
   default     = "Standard_D8s_v5"
-  description = "Only used during the build; 8 vCPUs compile llama.cpp in minutes."
+  description = "Only used during the build; the image runs on any size. Needs at least 8 GB RAM for the self-test (e.g. Standard_B4ms for a cheap test build, Standard_D8s_v5 for a fast one)."
 }
 
 variable "model_name" {

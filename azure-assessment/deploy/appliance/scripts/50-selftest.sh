@@ -6,7 +6,7 @@ azure-assess demo -c "Self test" -f html -o . >/dev/null
 test -s self-test-azure-assessment.html
 
 systemctl start llm-server.service
-for _ in $(seq 1 150); do
+for _ in $(seq 1 450); do   # up to 15 minutes: slow disks and burstable (B-series) build VMs
   curl -fsS http://127.0.0.1:8080/v1/models >/dev/null 2>&1 && break
   sleep 2
 done

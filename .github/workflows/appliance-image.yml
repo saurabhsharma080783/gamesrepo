@@ -12,8 +12,11 @@ on:
         description: "Image version, e.g. 1.0.0"
         required: true
       location:
-        description: "Build region"
-        default: "westeurope"
+        description: "Build region: must be the region of the image definition (setup-gallery.sh)"
+        default: "southindia"
+      build_vm_size:
+        description: "Temporary build VM (needs quota in the region). Does not change the image; B4ms is cheapest that fits the model"
+        default: "Standard_B4ms"
 
 permissions:
   contents: read
@@ -54,6 +57,7 @@ jobs:
             -var "subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" \
             -var "image_version=${{ inputs.image_version }}" \
             -var "location=${{ inputs.location }}" \
+            -var "build_vm_size=${{ inputs.build_vm_size }}" \
             deploy/appliance/packer
       - uses: actions/upload-artifact@v4
         with:
