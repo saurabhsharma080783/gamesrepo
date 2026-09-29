@@ -166,6 +166,8 @@ Pass `--config examples/config.json` to apply the customer's policy:
   committed, so the latest report is kept in the repository. Use `--out <folder>` to write somewhere else.
   Files are named after the customer, so reports from a previous customer stay until you delete them.
 * `reports/` currently holds the Contoso sample built from `examples/sample-inventory.csv`, plus a PDF copy of the Word report.
+* `reports/ai-sample/` holds the same sample built with `--ai` using Qwen 2.5 7B, with the AI draft audit file and a
+  PDF copy. [docs/AI-DRY-RUN.md](docs/AI-DRY-RUN.md) has the dry-run results and a human review of that text.
 
 ## Development
 
