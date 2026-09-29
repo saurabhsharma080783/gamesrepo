@@ -34,6 +34,25 @@ The VM is only needed for about an hour per engagement:
 * **Optional Spot pricing** (`useSpot: true`) for a large discount. If Azure evicts the VM, it is
   deallocated, not deleted; start it and rerun.
 
+## Quick start: install on an existing Ubuntu VM (no image needed)
+
+For a trial, or when you just want one VM: create an Ubuntu Server 24.04 VM (for example
+Standard_D8s_v5 or D16s_v5, 64 GB disk, outbound internet), connect to it (for example with Azure Bastion
+in the browser), and run:
+
+```bash
+sudo apt install -y git
+git clone https://github.com/saurabhsharma080783/gamesrepo.git
+cd gamesrepo && git checkout claude/ai-assessment-report-nlp-tiawtp
+sudo azure-assessment/deploy/appliance/install-appliance.sh      # about 20-30 minutes
+# log out and back in, then:
+assess-run azure-assessment/examples/sample-inventory.csv -c "Contoso" --config azure-assessment/examples/config.json
+```
+
+The result is the same as a VM built from the image. For self-deallocation, give the VM a system-assigned
+managed identity with the Virtual Machine Contributor role on itself; otherwise use Auto-shutdown in the portal.
+`setup-llm-vm.sh` is for a different layout: the model on its own VM, called by the app on another machine.
+
 ## Our side: build the image
 
 1. Once: `./setup-gallery.sh <our-subscription-id> westeurope` creates the gallery and image definition.
