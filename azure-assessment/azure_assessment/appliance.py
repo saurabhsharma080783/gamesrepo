@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shlex
 import shutil
 import subprocess
 import sys
@@ -124,6 +125,8 @@ def run_main(argv: list[str] | None = None) -> int:
 
     from .cli import customer_slug, main as assess_main
 
+    os.umask(0o002)   # reports under /srv/assessments stay writable for the whole 'assess' group
+
     out = Path(args.out) if args.out else DATA / customer_slug(args.customer) / datetime.now().strftime("%Y%m%d-%H%M")
     cmd = ["report", *args.inputs, "-c", args.customer, "-f", args.formats, "-o", str(out)]
     for flag, value in (("--config", args.config), ("--inventory-date", args.inventory_date)):
@@ -158,9 +161,15 @@ def run_main(argv: list[str] | None = None) -> int:
         _touch_activity()
     if rc == 0:
         print(f"\nReports are in {out}")
-        if not args.ai_draft and not args.no_ai:
-            print("Next: review the AI text in the *-ai-draft.json file, then rebuild with\n"
-                  f"  assess-run {' '.join(args.inputs)} -c \"{args.customer}\" --ai-draft <file> "
+        drafts = sorted(out.glob("*-ai-draft.json"))
+        if drafts and not args.ai_draft:
+            # Same inputs and options as this run: otherwise the facts differ and the AI text is not used.
+            same = [shlex.quote(i) for i in args.inputs] + ["-c", shlex.quote(args.customer)]
+            for flag, value in (("--config", args.config), ("--inventory-date", args.inventory_date)):
+                if value:
+                    same += [flag, shlex.quote(value)]
+            print("Next: review the AI text (edit \"paragraphs\" in the draft file), then rebuild with:\n"
+                  f"  assess-run {' '.join(same)} --ai-draft {shlex.quote(str(drafts[0]))} "
                   "--reviewed-by \"<your name>\"")
     if args.deallocate:
         if rc != 0:

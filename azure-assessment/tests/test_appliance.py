@@ -121,7 +121,9 @@ def test_assess_run_local_model_then_deallocate(dirs, monkeypatch, capsys):
     from azure_assessment.loaders import csv_loader, sample
     inv = dirs / "inventory.csv"
     csv_loader.save(sample.build().resources, inv)
-    rc = appliance.run_main([str(inv), "-c", "Fabrikam", "-f", "html", "--deallocate"])
+    policy = dirs / "policy.json"
+    policy.write_text(json.dumps({"required_tags": ["owner"]}))
+    rc = appliance.run_main([str(inv), "-c", "Fabrikam", "-f", "html", "--config", str(policy), "--deallocate"])
     srv.shutdown()
     out = capsys.readouterr().out
     assert rc == 0 and deallocated == [1]
@@ -129,13 +131,16 @@ def test_assess_run_local_model_then_deallocate(dirs, monkeypatch, capsys):
     run_dir = next((appliance.DATA / "fabrikam").iterdir())
     assert {p.name for p in run_dir.iterdir()} >= {"fabrikam-azure-assessment.html",
                                                    "fabrikam-azure-assessment-ai-draft.json"}
-    assert "--ai-draft <file>" in out and not (appliance.STATE / "run.pid").exists()
+    assert not (appliance.STATE / "run.pid").exists()
+    hint = next(ln for ln in out.splitlines() if ln.strip().startswith("assess-run"))
+    assert f"--config {policy}" in hint and "--ai-draft " + str(next(run_dir.glob("*-ai-draft.json"))) in hint
 
     # Rebuild from the (reviewed) draft: no model is started.
     systemctl.clear()
     draft = next(run_dir.glob("*-ai-draft.json"))
-    assert appliance.run_main([str(inv), "-c", "Fabrikam", "-f", "html", "--ai-draft", str(draft),
-                               "--reviewed-by", "A. Consultant", "-o", str(dirs / "final")]) == 0
+    assert appliance.run_main([str(inv), "-c", "Fabrikam", "-f", "html", "--config", str(policy), "--ai-draft",
+                               str(draft), "--reviewed-by", "A. Consultant", "-o", str(dirs / "final")]) == 0
+    assert "facts have changed" not in capsys.readouterr().err   # same options -> the AI text is kept
     assert systemctl == [] and "reviewed by A. Consultant" in (dirs / "final" / "fabrikam-azure-assessment.html").read_text()
 
 
