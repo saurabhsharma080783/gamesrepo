@@ -1,0 +1,47 @@
+name: azure-assessment CI
+
+on:
+  push:
+    paths: ["azure-assessment/**", ".github/workflows/azure-assessment-ci.yml"]
+  pull_request:
+    paths: ["azure-assessment/**", ".github/workflows/azure-assessment-ci.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: azure-assessment
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: pip install -e '.[dev]'
+      - name: Tests
+        run: pytest -q
+
+  appliance-lint:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: azure-assessment/deploy/appliance
+    steps:
+      - uses: actions/checkout@v4
+      - name: ShellCheck
+        run: shellcheck scripts/*.sh setup-gallery.sh copy-to-customer.sh
+      - uses: hashicorp/setup-packer@v3
+      - name: Packer format and syntax
+        run: |
+          packer fmt -check -diff packer
+          packer init packer
+          packer validate -syntax-only packer
+      - name: Bicep build and lint
+        run: |
+          az bicep install
+          az bicep build --file bicep/main.bicep --stdout > /dev/null
+          az bicep lint --file bicep/main.bicep

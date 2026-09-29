@@ -1,0 +1,14 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "imageId": { "value": "/subscriptions/<customer-sub>/resourceGroups/rg-azure-assess/providers/Microsoft.Compute/images/azure-assess-appliance-1-0-0" },
+    "subnetId": { "value": "/subscriptions/<customer-sub>/resourceGroups/<network-rg>/providers/Microsoft.Network/virtualNetworks/<vnet>/subnets/<subnet>" },
+    "sshPublicKey": { "value": "ssh-ed25519 AAAA... assessor@example" },
+    "vmSize": { "value": "Standard_D16s_v5" },
+    "autoShutdownTime": { "value": "1900" },
+    "autoShutdownTimeZone": { "value": "UTC" },
+    "idleMinutes": { "value": 60 },
+    "useSpot": { "value": false }
+  }
+}

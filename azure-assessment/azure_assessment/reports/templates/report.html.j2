@@ -84,6 +84,7 @@ tbody tr:hover { background: var(--surface-2); }
 article.env { margin-bottom: 16px; scroll-margin-top: 56px; }
 article.env h3 { margin-top: 0; color: var(--primary); }
 article.env p { max-width: 80ch; }
+.ai-mark { font-size: 12px; font-style: italic; color: var(--muted); margin-top: 4px; }
 .env-list { padding-left: 20px; max-width: 80ch; } .env-list li { margin-bottom: 6px; }
 .env-table { margin: 12px 0; }
 caption { text-align: left; font-weight: 600; color: var(--ink-2); padding: 0 0 6px; }
@@ -157,11 +158,19 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px
         <div class="muted">{{ a.findings|length }} findings · {{ sev.High }} high · {{ sev.Medium }} medium · {{ sev.Low }} low</div>
       </div>
     </div>
+    {%- if ai and ai.executive() %}<div class="ai-text">{% for para in ai.executive() %}<p>{{ para }}</p>{% endfor %}<p class="ai-mark">AI-drafted narrative, grounded in the assessment facts (see <a href="#ai-use">Use of AI</a>).</p></div>{% endif %}
     <h3>Key observations</h3>
     {% set obs = a.key_observations() %}
     <ul class="obs">{% for o in obs[:1] + [arch.headline] + obs[1:] %}<li>{{ o }}</li>{% endfor %}</ul>
   </div>
 </section>
+
+{%- if ai %}
+<section id="ai-use">
+  <h2>Use of AI in this report</h2>
+  <div class="card"><p style="margin:0">{{ ai.note }}</p></div>
+</section>
+{% endif %}
 
 {% if a.coverage_gaps %}
 <section id="coverage">
@@ -191,7 +200,9 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px
   <article class="card env arch" id="arch-{{ d.key }}">
     <h3>{{ loop.index }}. {{ d.title }}</h3>
     <p class="pattern"><span class="pattern-label">Pattern identified</span> <strong>{{ d.pattern }}</strong> <span class="pill conf-{{ d.confidence }}">{{ d.confidence }} confidence</span></p>
-    {% for para in d.summary %}<p>{{ para }}</p>{% endfor %}
+    {%- set drafted = ai.architecture(d.key) if ai else [] %}
+    {% for para in drafted or d.summary %}<p>{{ para }}</p>{% endfor %}
+    {%- if drafted %}<p class="ai-mark">AI-drafted narrative</p>{% endif %}
     {% if d.key == "network" and topology_svg %}
     <figure class="topology-wrap">
       <div class="table-wrap">{{ topology_svg|safe }}</div>
@@ -227,7 +238,9 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px
   {% for ns in sections %}
   <article class="card env" id="env-{{ ns.key }}">
     <h3>{{ loop.index }}. {{ ns.title }}</h3>
-    {% for para in ns.paragraphs %}<p>{{ para }}</p>{% endfor %}
+    {%- set drafted = ai.section(ns.key) if ai else [] %}
+    {% for para in drafted or ns.paragraphs %}<p>{{ para }}</p>{% endfor %}
+    {%- if drafted %}<p class="ai-mark">AI-drafted narrative</p>{% endif %}
     {% if ns.bullets %}<ul class="env-list">{% for b in ns.bullets %}{% set name, rest = b.split(": ", 1) %}<li><strong>{{ name }}:</strong> {{ rest }}</li>{% endfor %}</ul>{% endif %}
     {% for caption, t in ns.tables %}
     <div class="table-wrap env-table">

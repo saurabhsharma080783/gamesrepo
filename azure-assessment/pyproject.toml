@@ -21,6 +21,9 @@ dev = ["pytest>=7"]
 
 [project.scripts]
 azure-assess = "azure_assessment.cli:main"
+assess-run = "azure_assessment.appliance:run_main"
+assess-mode = "azure_assessment.appliance:mode_main"
+assess-idle-check = "azure_assessment.appliance:idle_main"
 
 [tool.setuptools.packages.find]
 include = ["azure_assessment*"]

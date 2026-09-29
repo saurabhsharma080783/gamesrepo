@@ -1,0 +1,61 @@
+name: Build appliance image
+
+# Builds a new version of the assessment appliance image in our Azure Compute Gallery.
+# Run manually (Actions tab) with a version number. Needs these repository secrets for OpenID Connect
+# sign-in (no stored password): AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID. The identity
+# needs Contributor on the gallery resource group and on the subscription for the temporary build VM.
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_version:
+        description: "Image version, e.g. 1.0.0"
+        required: true
+      location:
+        description: "Build region"
+        default: "westeurope"
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: appliance-image
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    defaults:
+      run:
+        working-directory: azure-assessment
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Test before building
+        run: |
+          pip install -e '.[dev]'
+          pytest -q
+      - name: Build the app wheel
+        run: python -m pip wheel --no-deps -w dist .
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - uses: hashicorp/setup-packer@v3
+      - name: Build image
+        run: |
+          packer init deploy/appliance/packer
+          packer build -color=false \
+            -var "subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" \
+            -var "image_version=${{ inputs.image_version }}" \
+            -var "location=${{ inputs.location }}" \
+            deploy/appliance/packer
+      - uses: actions/upload-artifact@v4
+        with:
+          name: appliance-manifest-${{ inputs.image_version }}
+          path: azure-assessment/dist/appliance-manifest.json

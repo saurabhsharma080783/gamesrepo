@@ -1,0 +1,2 @@
+# Members of the 'assess' group may start and stop the local model server (used by assess-run).
+%assess ALL=(root) NOPASSWD: /usr/bin/systemctl start llm-server.service, /usr/bin/systemctl stop llm-server.service

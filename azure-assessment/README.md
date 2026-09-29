@@ -32,7 +32,8 @@ application hosting, security services, monitoring, and governance and tagging. 
 related findings, and each finding links back to the part that describes the affected resources. When the
 export lacks configuration data, the text says what could not be determined instead of guessing.
 
-A `*-findings.json` file is also written so the results can be fed into other tools.
+A `*-findings.json` file is also written so the results can be fed into other tools. With `--ai`, the
+narrative is drafted by a self-hosted open-source LLM (see [AI-drafted narrative](#ai-drafted-narrative-optional)).
 
 ```
 customer export (.csv / .json, one or many files) ──► loaders ──► assessment rules + scoring ──► docx / pptx / html
@@ -65,6 +66,25 @@ azure-assess demo --customer "Contoso"
 # Produce an example input file to show a customer the expected format
 azure-assess template -o inventory-template.csv     # or .json
 ```
+
+## AI-drafted narrative (optional)
+
+Add `--ai` to have a **self-hosted open-source language model** (for example Qwen 2.5 or Llama 3.1 via
+Ollama) write the executive summary, the architecture summaries and the infrastructure overview in
+consultant-style prose that explains what the findings mean for the business. The model is given only
+the facts the assessment engine produced; every figure and rule ID it writes is checked against them, and
+any passage that fails keeps the standard wording. AI passages are marked in the reports, and a
+`*-ai-draft.json` audit file is written next to them. No data is sent to a hosted AI service.
+
+```bash
+docker compose -f deploy/llm/docker-compose.yml up -d        # Ollama + qwen2.5:7b-instruct, localhost only
+azure-assess report inventory.json -c "Fabrikam" --ai
+azure-assess report inventory.json -c "Fabrikam" --ai --llm-url http://gpu-box:8000/v1 --llm-model llama3.1:8b
+```
+
+Scores, findings, tables and the roadmap are never AI-generated. If the model server can't be reached,
+the standard report is produced. See [docs/AI-NARRATIVE.md](docs/AI-NARRATIVE.md) for how it works,
+model choices, sizing and the path to fine-tuning our own model.
 
 ## Input formats
 
@@ -146,6 +166,8 @@ Pass `--config examples/config.json` to apply the customer's policy:
   committed, so the latest report is kept in the repository. Use `--out <folder>` to write somewhere else.
   Files are named after the customer, so reports from a previous customer stay until you delete them.
 * `reports/` currently holds the Contoso sample built from `examples/sample-inventory.csv`, plus a PDF copy of the Word report.
+* `reports/ai-sample/` holds the same sample built with `--ai` using Qwen 2.5 7B, with the AI draft audit file and a
+  PDF copy. [docs/AI-DRY-RUN.md](docs/AI-DRY-RUN.md) has the dry-run results and a human review of that text.
 
 ## Development
 

@@ -1,0 +1,7 @@
+[Unit]
+Description=Deallocate this VM when idle (no logins, no reports) to stop compute billing
+
+[Service]
+Type=oneshot
+EnvironmentFile=-/etc/azure-assess/idle.env
+ExecStart=/usr/local/bin/assess-idle-check
