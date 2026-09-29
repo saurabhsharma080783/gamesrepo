@@ -25,7 +25,7 @@ DEFAULT_FORMATS = ("docx", "html")  # PowerPoint on request: -f docx,html,pptx
 
 
 def _load_config(path: str | None) -> dict:
-    return json.loads(Path(path).read_text()) if path else {}
+    return json.loads(Path(path).read_text(encoding="utf-8-sig")) if path else {}
 
 
 def customer_slug(customer: str) -> str:
@@ -88,7 +88,7 @@ def generate_reports(inventory: Inventory, out_dir: Path, customer: str, formats
     if a.ai_draft is not None:
         # Kept next to the reports for review, and as facts -> text pairs for later fine-tuning.
         draft_path = out_dir / f"{base}-ai-draft.json"
-        draft_path.write_text(json.dumps(a.ai_draft.to_dict(), indent=2))
+        draft_path.write_text(json.dumps(a.ai_draft.to_dict(), indent=2), encoding="utf-8")
         written["ai-draft"] = draft_path
     with tempfile.TemporaryDirectory() as tmp:
         imgs = charts.render_all(a, Path(tmp)) if {"docx", "pptx"} & set(formats) else {}
@@ -99,7 +99,7 @@ def generate_reports(inventory: Inventory, out_dir: Path, customer: str, formats
         if "pptx" in formats:
             written["pptx"] = ppt_report.build(a, imgs, out_dir / f"{base}.pptx")
     findings_path = out_dir / f"{base}-findings.json"
-    findings_path.write_text(json.dumps([f.__dict__ for f in a.findings], indent=2))
+    findings_path.write_text(json.dumps([f.__dict__ for f in a.findings], indent=2), encoding="utf-8")
     written["findings"] = findings_path
 
     print(f"Assessed {a.total_resources} resources: score {a.overall_score_label}/100, {len(a.findings)} findings")

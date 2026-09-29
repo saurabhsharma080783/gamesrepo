@@ -115,7 +115,7 @@ class AIDraft:
     @classmethod
     def load(cls, path: str | Path) -> "AIDraft":
         try:
-            return cls.from_dict(json.loads(Path(path).read_text()))
+            return cls.from_dict(json.loads(Path(path).read_text(encoding="utf-8-sig")))
         except (OSError, json.JSONDecodeError, TypeError) as exc:
             raise ValueError(f"cannot read AI draft {path}: {exc}") from exc
 

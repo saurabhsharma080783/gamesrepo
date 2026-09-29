@@ -82,6 +82,9 @@ def test_settings_file_and_overrides(tmp_path, monkeypatch):
                                                                  "secret")
     monkeypatch.setenv("AZURE_ASSESS_LLM_CONFIG", f)
     assert load().source == f
+    bom = tmp_path / "notepad.json"   # Windows Notepad may save UTF-8 with a byte-order mark
+    bom.write_bytes(b"\xef\xbb\xbf" + json.dumps({"url": "http://127.0.0.1:1/v1", "provider": "Caf\u00e9"}).encode())
+    assert load(str(bom)).provider == "Caf\u00e9"
     with pytest.raises(SettingsError, match="unknown setting"):
         load(_write(tmp_path / "bad.json", {"url": "x", "api_key": "inline keys are not allowed"}))
     with pytest.raises(SettingsError, match="not found"):

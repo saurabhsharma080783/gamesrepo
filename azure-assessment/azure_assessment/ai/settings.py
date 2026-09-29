@@ -47,7 +47,7 @@ class LLMSettings:
     def api_key(self) -> str:
         if self.api_key_file:
             try:
-                return Path(self.api_key_file).read_text().strip()
+                return Path(self.api_key_file).read_text(encoding="utf-8-sig").strip()
             except OSError as exc:
                 raise SettingsError(f"cannot read the API key file {self.api_key_file}: {exc}") from exc
         return os.environ.get(self.api_key_env, "") if self.api_key_env else ""
@@ -87,7 +87,7 @@ def load(path: str | None = None, **overrides) -> LLMSettings:
     for p in candidates:
         if p.is_file():
             try:
-                data = json.loads(p.read_text())
+                data = json.loads(p.read_text(encoding="utf-8-sig"))
             except (OSError, json.JSONDecodeError) as exc:
                 raise SettingsError(f"cannot read LLM settings {p}: {exc}") from exc
             source = str(p)
