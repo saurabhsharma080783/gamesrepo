@@ -1,0 +1,28 @@
+# Local language model server: llama.cpp with an OpenAI-compatible API on 127.0.0.1:8080.
+# Not started at boot: assess-run starts it only while a report is being drafted, then stops it.
+[Unit]
+Description=Local language model server for azure-assess (llama.cpp, 127.0.0.1:8080)
+After=network.target
+
+[Service]
+User=llm
+Group=llm
+EnvironmentFile=/etc/azure-assess/llm-server.env
+ExecStart=/bin/sh -c 'exec /opt/llm/bin/python -m llama_cpp.server --model "$MODEL_PATH" --model_alias "$MODEL_NAME" --n_ctx 8192 --n_threads "$(nproc)" --host 127.0.0.1 --port 8080'
+Restart=on-failure
+TimeoutStartSec=300
+# Hardening: read-only system, no home access, and no network other than loopback,
+# so the model server cannot send anything anywhere even if it wanted to.
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+IPAddressAllow=localhost
+IPAddressDeny=any
+
+[Install]
+WantedBy=multi-user.target

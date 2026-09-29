@@ -1,0 +1,18 @@
+#!/bin/sh
+cat <<'MOTD'
+
+  Azure assessment appliance
+  --------------------------
+  Copy the customer's inventory export here (scp via Bastion), then:
+
+    assess-run inventory.json -c "Customer" [--config policy.json] [--deallocate]
+
+  Review the AI text in the *-ai-draft.json it writes, then rebuild:
+
+    assess-run inventory.json -c "Customer" --ai-draft <file> --reviewed-by "Your Name"
+
+  Reports go to /srv/assessments/<customer>/<date-time>/.
+  Model mode: assess-mode show | local | hosted      Check: azure-assess ai-check
+  The VM deallocates itself after 60 idle minutes (set ASSESS_IDLE_MINUTES in /etc/azure-assess/idle.env).
+
+MOTD
