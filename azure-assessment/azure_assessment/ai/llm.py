@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import ssl
 import urllib.error
 import urllib.request
 from typing import Protocol
@@ -31,13 +32,16 @@ class ChatClient(Protocol):
 
 class OpenAICompatibleClient:
     def __init__(self, base_url: str | None = None, model: str | None = None, api_key: str | None = None,
-                 timeout: float = 180, temperature: float = 0.2, max_tokens: int = 900):
+                 timeout: float = 180, temperature: float = 0.2, max_tokens: int = 900,
+                 ca_bundle: str | None = None):
         self.base_url = (base_url or os.environ.get("AZURE_ASSESS_LLM_URL") or DEFAULT_URL).rstrip("/")
         self.model = model or os.environ.get("AZURE_ASSESS_LLM_MODEL") or DEFAULT_MODEL
         self.api_key = api_key or os.environ.get("AZURE_ASSESS_LLM_API_KEY") or ""
         self.timeout = timeout
         self.temperature = temperature
         self.max_tokens = max_tokens
+        # Certificates are always verified; ca_bundle adds a CA to trust (e.g. the customer's internal CA).
+        self._ssl = ssl.create_default_context(cafile=ca_bundle) if ca_bundle else None
 
     def _request(self, method: str, path: str, body: dict | None = None, timeout: float | None = None) -> dict:
         headers = {"Content-Type": "application/json"}
@@ -46,7 +50,7 @@ class OpenAICompatibleClient:
         req = urllib.request.Request(self.base_url + path, method=method, headers=headers,
                                      data=json.dumps(body).encode() if body is not None else None)
         try:
-            with urllib.request.urlopen(req, timeout=timeout or self.timeout) as resp:
+            with urllib.request.urlopen(req, timeout=timeout or self.timeout, context=self._ssl) as resp:
                 return json.loads(resp.read().decode("utf-8"))
         except urllib.error.HTTPError as exc:
             detail = exc.read().decode("utf-8", "replace")[:300]
