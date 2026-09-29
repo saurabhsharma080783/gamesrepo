@@ -3,15 +3,17 @@
 Each fact sheet is plain text built from the assessment, architecture analysis and
 infrastructure narrative. The model sees nothing else (no raw inventory), which keeps
 prompts small and makes every statement traceable to the rule engine.
+
+Per-resource table rows are left out on purpose: the reports show those tables anyway, and
+in testing a 7B model given the rows mixed up which resource had which setting (a wrong
+account listed as LRS, a dev account called production). The summarised statements carry
+the counts it needs.
 """
 from __future__ import annotations
 
 from ..analysis.architecture import Architecture, ArchDimension
 from ..analysis.assessor import Assessment, RuleSummary
 from ..analysis.narrative import NarrativeSection
-
-MAX_TABLE_ROWS = 12
-
 
 def _related(related: list[RuleSummary]) -> list[str]:
     if not related:
@@ -21,14 +23,6 @@ def _related(related: list[RuleSummary]) -> list[str]:
         out.append(f"- {r.rule.id} {r.rule.title} ({r.rule.pillar}, {r.rule.severity} severity): "
                    f"{r.affected} of {r.evaluated} evaluated resources affected. "
                    f"Recommendation: {r.rule.recommendation}")
-    return out
-
-
-def _table(caption: str, headers: list[str], rows: list[tuple]) -> list[str]:
-    out = [f"Table '{caption}' ({' | '.join(headers)}):"]
-    out += ["- " + " | ".join(str(c) for c in row) for row in rows[:MAX_TABLE_ROWS]]
-    if len(rows) > MAX_TABLE_ROWS:
-        out.append(f"- (further rows omitted; the full table of {len(rows)} rows is shown in the report)")
     return out
 
 
@@ -74,8 +68,6 @@ def section(ns: NarrativeSection) -> str:
     lines = [f"Section: {ns.title}", "Statements:"]
     lines += [f"- {p}" for p in ns.paragraphs]
     lines += [f"- {b}" for b in ns.bullets]
-    for caption, t in ns.tables:
-        lines += _table(caption, t.headers, t.rows)
     lines += _related(ns.related)
     return "\n".join(lines)
 
@@ -89,7 +81,5 @@ def dimension(d: ArchDimension) -> str:
     if d.considerations:
         lines.append("Considerations against the Microsoft reference architecture:")
         lines += [f"- {k}" for k in d.considerations]
-    for caption, headers, rows, _ in d.tables:
-        lines += _table(caption, headers, rows)
     lines += _related(d.related)
     return "\n".join(lines)

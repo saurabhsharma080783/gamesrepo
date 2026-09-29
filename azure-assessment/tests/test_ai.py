@@ -138,3 +138,15 @@ def test_cli_ai_server_unreachable_keeps_standard_report(tmp_path, capsys):
 def test_client_reports_missing_model(llm_server):
     with pytest.raises(Exception, match=re.escape("ollama pull other")):
         OpenAICompatibleClient(llm_server, "other").check()
+
+
+def test_fact_sheets_leave_out_per_resource_rows():
+    # A real 7B model misattributed settings when given table rows; the sheets carry summaries only.
+    from azure_assessment.ai import facts
+    from azure_assessment.analysis import architecture, narrative
+    a = assess(sample.build(), customer="Contoso")
+    storage = next(s for s in narrative.build(a) if s.key == "storage")
+    sheet = facts.section(storage)
+    assert "storage accounts" in sheet and "Related findings:" in sheet
+    assert not any(str(row[0]) in sheet for _, t in storage.tables for row in t.rows)
+    assert "Table '" not in facts.dimension(architecture.analyse(a).dimensions[0])

@@ -31,7 +31,7 @@ class ChatClient(Protocol):
 
 class OpenAICompatibleClient:
     def __init__(self, base_url: str | None = None, model: str | None = None, api_key: str | None = None,
-                 timeout: float = 180, temperature: float = 0.3, max_tokens: int = 900):
+                 timeout: float = 180, temperature: float = 0.2, max_tokens: int = 900):
         self.base_url = (base_url or os.environ.get("AZURE_ASSESS_LLM_URL") or DEFAULT_URL).rstrip("/")
         self.model = model or os.environ.get("AZURE_ASSESS_LLM_MODEL") or DEFAULT_MODEL
         self.api_key = api_key or os.environ.get("AZURE_ASSESS_LLM_API_KEY") or ""
