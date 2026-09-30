@@ -129,6 +129,11 @@ source "azure-arm" "appliance" {
 build {
   sources = ["source.azure-arm.appliance"]
 
+  # Folder uploads (source ending in /) copy the contents into the destination, which must already exist.
+  provisioner "shell" {
+    inline = ["mkdir -p /tmp/dist /tmp/appliance /tmp/model"]
+  }
+
   provisioner "file" {
     source      = "${local.app_root}/dist/"
     destination = "/tmp/dist"
@@ -137,10 +142,6 @@ build {
   provisioner "file" {
     source      = "${path.root}/../files/"
     destination = "/tmp/appliance"
-  }
-
-  provisioner "shell" {
-    inline = ["mkdir -p /tmp/model"]
   }
 
   dynamic "provisioner" {
